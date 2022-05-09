@@ -2,7 +2,6 @@
 	"name": "gh-linear",
 	"version": "0.0.0",
 	"license": "MIT",
-	"bin": "dist/cli.js",
 	"engines": {
 		"node": ">=10"
 	},
@@ -15,6 +14,10 @@
 	"files": [
 		"dist/cli.js"
 	],
+	"main": "dist/cli.js",
+	"bin": {
+		"linhub": "./dist/cli.js"
+	},
 	"dependencies": {
 		"@apollo/client": "^3.6.2",
 		"chalk-pipe": "^5.1.1",
@@ -49,18 +52,10 @@
 		}
 	},
 	"fig": {
-		"test": {
-				"description": "Run all tests",
+		"": {
+				"description": "Only command -> Start a git branch and push to remote right from your linear ticket",
 				"icon": "🧪",
 				"priority": 100
-		},
-		"build": {
-				"description": "Build the project",
-				"icon": "🛠"
-		},
-		"start": {
-				"description": "Start the react app",
-				"icon": "⭐️"
 		}
 	},
 	"devDependencies": {

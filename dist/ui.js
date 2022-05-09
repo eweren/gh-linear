@@ -26,55 +26,68 @@ var __importDefault = (this && this.__importDefault) || function (mod) {
     return (mod && mod.__esModule) ? mod : { "default": mod };
 };
 Object.defineProperty(exports, "__esModule", { value: true });
-exports.client = void 0;
 const react_1 = __importStar(require("react"));
 const ink_1 = require("ink");
 const ink_text_input_1 = __importDefault(require("ink-text-input"));
 const ink_spinner_1 = __importDefault(require("ink-spinner"));
 const client_1 = require("@apollo/client");
-const context_1 = require("@apollo/client/link/context");
 const cross_fetch_1 = __importDefault(require("cross-fetch"));
 const ink_select_input_1 = __importDefault(require("ink-select-input"));
 const ink_task_list_1 = require("ink-task-list");
 const cli_spinners_1 = __importDefault(require("cli-spinners"));
 const ink_link_1 = __importDefault(require("ink-link"));
-// import { execSync } from "child_process";
-const httpLink = new client_1.HttpLink({
-    fetch: cross_fetch_1.default,
-    uri: "https://api.linear.app/graphql",
-});
-const authLink = (0, context_1.setContext)((_, { headers }) => {
-    return {
-        headers: {
-            ...headers,
-            authorization: `Bearer lin_api_fPlz9lhsAK4FtjlnnMEZktXqwokmzKqOtvIg3wl6`
-        },
-    };
-});
-exports.client = new client_1.ApolloClient({
-    link: authLink.concat(httpLink),
-    cache: new client_1.InMemoryCache()
-});
-const gitBranchCreateSteps = [
-    "Creating branch...",
-    "Switching to branch...",
-    "Pushing branch...",
-    "Branch created successfully! You can start Working now",
-];
+const child_process_1 = require("child_process");
+const configFilePath = "~/.gh/linear/config.yaml";
+const gitBranchCreateSteps = {
+    check: "Check if branch exists...",
+    create: "Creating and switching to branch...",
+    switch: "Switching to branch...",
+    push: "Pushing branch...",
+    draft: "Creating a Draft PR...",
+    success: "Branch created successfully! You can start Working now",
+};
 const App = () => {
     const [value, setValue] = (0, react_1.useState)("");
     const [response, setResponse] = (0, react_1.useState)("");
+    const [linearApiToken, setLinearApiToken] = (0, react_1.useState)("");
+    const [linearApiTokenPresent, setLinearApiTokenPresent] = (0, react_1.useState)(false);
     const [loading, setLoading] = (0, react_1.useState)(false);
-    const [gitBranchCreateStep, setGitBranchCreateStep] = (0, react_1.useState)(gitBranchCreateSteps[0]);
+    const [gitBranchCreateStep, setGitBranchCreateStep] = (0, react_1.useState)(gitBranchCreateSteps.check);
     const [creatingBranch, setCreatingBranch] = (0, react_1.useState)(false);
     const [selected, setSelected] = (0, react_1.useState)();
     const [loaded, setLoaded] = (0, react_1.useState)(false);
     const [issues, setIssues] = (0, react_1.useState)([]);
     const [data, setData] = (0, react_1.useState)([]);
+    const [appheight, setHeight] = (0, react_1.useState)(50);
+    (0, react_1.useEffect)(() => {
+        if (!linearApiToken) {
+            return;
+        }
+    }, [linearApiToken]);
+    (0, react_1.useEffect)(() => {
+        const intervalStatusCheck = setInterval(() => {
+            setHeight(process.stdout.rows);
+        }, 1000);
+        setHeight(process.stdout.rows);
+        return () => {
+            clearInterval(intervalStatusCheck);
+        };
+    }, []);
     const handleSubmit = async () => {
         var _a;
         setLoading(true);
-        const response = await exports.client.query({ query: (0, client_1.gql) `
+        const httpLink = new client_1.HttpLink({
+            fetch: cross_fetch_1.default,
+            uri: "https://api.linear.app/graphql",
+            headers: {
+                authorization: `Bearer ${linearApiToken.trim()}`
+            }
+        });
+        const client = new client_1.ApolloClient({
+            link: httpLink,
+            cache: new client_1.InMemoryCache()
+        });
+        const response = await client.query({ query: (0, client_1.gql) `
 			query MyIssues($filter: IssueFilter) {
 				issues(filter: $filter) {
 					nodes {
@@ -109,9 +122,12 @@ const App = () => {
                 }
             } });
         if ((_a = response === null || response === void 0 ? void 0 : response.data) === null || _a === void 0 ? void 0 : _a.issues) {
-            // setValue(JSON.stringify(response.data.issues));
-            const is = response.data.issues.nodes.slice().sort((a, b) => a.state.position === b.state.position ? b.priority - a.priority : b.state.position - a.state.position);
-            setIssues(response.data.issues.nodes);
+            let is = response.data.issues.nodes.slice().filter(n => n.branchName.includes(value.toLowerCase()));
+            if (is.length === 0) {
+                is = response.data.issues.nodes.slice();
+            }
+            is = is.sort((a, b) => a.state.position === b.state.position ? b.priority - a.priority : b.state.position - a.state.position);
+            setIssues(is);
             setData(is.map(issue => ({ label: `${issue.url}~~~${issue.team.key}-${`${issue.number}`.padEnd(4)} ${issue.title}~~~${issue.branchName}`, value: issue.id })));
             setLoaded(true);
             setLoading(false);
@@ -120,6 +136,23 @@ const App = () => {
         setLoading(false);
         return false;
     };
+    (0, react_1.useEffect)(() => {
+        try {
+            const token = (0, child_process_1.execSync)(`cat ${configFilePath}`).toString();
+            setLinearApiToken(token);
+            setLinearApiTokenPresent(true);
+        }
+        catch (e) {
+            let previousPath = "";
+            configFilePath.split("/").forEach((path) => {
+                if (path !== "config.yaml" && path !== "~") {
+                    previousPath += path + "/";
+                    (0, child_process_1.execSync)(`mkdir ~/${previousPath}`).toString();
+                }
+            });
+            setLinearApiTokenPresent(false);
+        }
+    }, []);
     const selectIssue = (item) => {
         var _a;
         setSelected((_a = issues.find(i => i.id === item.value)) === null || _a === void 0 ? void 0 : _a.branchName);
@@ -128,18 +161,19 @@ const App = () => {
         setLoading(true);
         if (value === "Y" || value === "y" || value === "") {
             setCreatingBranch(true);
-            // const branchName = selected?.split("~~~")[2];
-            setGitBranchCreateStep(gitBranchCreateSteps[1]);
-            // setGitBranchCreateStep(execSync(`git ls-remote origin ${selected}`).toString())
-            // execSync(`git checkout -b }`);
-            setTimeout(() => {
-                setTimeout(() => {
-                    setGitBranchCreateStep(gitBranchCreateSteps[2]);
-                    setTimeout(() => {
-                        setGitBranchCreateStep(gitBranchCreateSteps[3]);
-                    }, 1000);
-                }, 1000);
-            }, 1000);
+            setGitBranchCreateStep(gitBranchCreateSteps.check);
+            const remoteBranchExists = (0, child_process_1.execSync)(`git ls-remote origin ${selected}`).toString();
+            if (remoteBranchExists) {
+                setGitBranchCreateStep(gitBranchCreateSteps.switch);
+                (0, child_process_1.execSync)(`git checkout ${selected}`);
+            }
+            else {
+                setGitBranchCreateStep(gitBranchCreateSteps.create);
+                (0, child_process_1.execSync)(`git checkout -b ${selected}`);
+                setGitBranchCreateStep(gitBranchCreateSteps.push);
+                (0, child_process_1.execSync)(`git push --set-upstream origin ${selected}`);
+            }
+            setGitBranchCreateStep(gitBranchCreateSteps.success);
         }
         else if (value === "N" || value === "n") {
             setCreatingBranch(false);
@@ -147,7 +181,17 @@ const App = () => {
             setLoading(false);
         }
     };
-    return (react_1.default.createElement(ink_1.Box, { alignItems: 'flex-end', justifyContent: 'flex-start' },
+    const saveLinearToken = (value) => {
+        (0, child_process_1.execSync)(`echo ${value} > ${configFilePath}`);
+        setLinearApiTokenPresent(true);
+    };
+    if (!linearApiTokenPresent) {
+        return react_1.default.createElement(ink_1.Box, { marginY: 1, flexDirection: 'column' },
+            react_1.default.createElement(ink_1.Text, { color: "blue", bold: true }, "Please provide your Linear API token."),
+            react_1.default.createElement(ink_1.Text, { color: "gray" }, "The token will only be saved locally."),
+            react_1.default.createElement(ink_text_input_1.default, { value: linearApiToken, placeholder: "lin_api_...", onChange: setLinearApiToken, onSubmit: saveLinearToken }));
+    }
+    return (react_1.default.createElement(ink_1.Box, { height: appheight, alignItems: 'flex-start', justifyContent: 'flex-start' },
         loading && !creatingBranch && react_1.default.createElement(ink_1.Box, null,
             react_1.default.createElement(ink_spinner_1.default, { type: "arc" }),
             react_1.default.createElement(ink_1.Text, null, "  Loading...")),
@@ -155,9 +199,9 @@ const App = () => {
             react_1.default.createElement(ink_select_input_1.default, { items: data, limit: 5, onSelect: selectIssue, itemComponent: ItemComponent }),
         loading && creatingBranch &&
             react_1.default.createElement(ink_task_list_1.TaskList, null,
-                gitBranchCreateStep !== gitBranchCreateSteps[gitBranchCreateSteps.length - 1] && react_1.default.createElement(ink_task_list_1.Task, { label: "Loading", state: "loading", output: gitBranchCreateStep, spinner: cli_spinners_1.default.arc }),
-                gitBranchCreateStep === gitBranchCreateSteps[gitBranchCreateSteps.length - 1] && react_1.default.createElement(ink_task_list_1.Task, { label: gitBranchCreateSteps[gitBranchCreateSteps.length - 1], state: "success" })),
-        loaded && selected && !loading && gitBranchCreateStep !== gitBranchCreateSteps[gitBranchCreateSteps.length - 1] &&
+                gitBranchCreateStep !== gitBranchCreateSteps.success && react_1.default.createElement(ink_task_list_1.Task, { label: "Loading", state: "loading", output: gitBranchCreateStep, spinner: cli_spinners_1.default.arc }),
+                gitBranchCreateStep === gitBranchCreateSteps.success && react_1.default.createElement(ink_task_list_1.Task, { label: gitBranchCreateSteps.success, state: "success" })),
+        loaded && selected && !loading && gitBranchCreateStep !== gitBranchCreateSteps.success &&
             react_1.default.createElement(react_1.default.Fragment, null,
                 react_1.default.createElement(ink_1.Text, null,
                     "Start work on: ",
