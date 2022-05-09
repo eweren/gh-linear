@@ -1,0 +1,79 @@
+{
+	"name": "gh-linear",
+	"version": "0.0.0",
+	"license": "MIT",
+	"bin": "dist/cli.js",
+	"engines": {
+		"node": ">=10"
+	},
+	"scripts": {
+		"build": "tsc && chmod +x dist/cli.js",
+		"start": "npm run build && dist/cli.js",
+		"pretest": "npm run build",
+		"test": "xo && ava"
+	},
+	"files": [
+		"dist/cli.js"
+	],
+	"dependencies": {
+		"@apollo/client": "^3.6.2",
+		"chalk-pipe": "^5.1.1",
+		"cross-fetch": "^3.1.5",
+		"graphql": "^16.4.0",
+		"ink": "^3.2.0",
+		"ink-color-pipe": "^3.0.0",
+		"ink-link": "^2.0.0",
+		"ink-select-input": "^4.2.1",
+		"ink-spinner": "^4.0.3",
+		"ink-table": "^3.0.0",
+		"ink-task-list": "^2.0.0",
+		"ink-text-input": "^4.0.3",
+		"meow": "^9.0.0",
+		"node-fetch": "^3.2.4",
+		"react": "^17.0.2"
+	},
+	"ava": {
+		"typescript": {
+			"extensions": [
+				"tsx"
+			],
+			"rewritePaths": {
+				"source/": "dist/"
+			}
+		}
+	},
+	"xo": {
+		"extends": "xo-react",
+		"rules": {
+			"react/prop-types": "off"
+		}
+	},
+	"fig": {
+		"test": {
+				"description": "Run all tests",
+				"icon": "🧪",
+				"priority": 100
+		},
+		"build": {
+				"description": "Build the project",
+				"icon": "🛠"
+		},
+		"start": {
+				"description": "Start the react app",
+				"icon": "⭐️"
+		}
+	},
+	"devDependencies": {
+		"@ava/typescript": "^3.0.1",
+		"@sindresorhus/tsconfig": "^2.0.0",
+		"@types/react": "^18.0.9",
+		"ava": "^4.2.0",
+		"chalk": "^4.1.2",
+		"eslint-config-xo-react": "^0.27.0",
+		"eslint-plugin-react": "^7.29.4",
+		"eslint-plugin-react-hooks": "^4.5.0",
+		"ink-testing-library": "^2.1.0",
+		"typescript": "^4.6.4",
+		"xo": "^0.39.1"
+	}
+}
