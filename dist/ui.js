@@ -38,7 +38,7 @@ const ink_select_input_1 = __importDefault(require("ink-select-input"));
 const ink_task_list_1 = require("ink-task-list");
 const cli_spinners_1 = __importDefault(require("cli-spinners"));
 const ink_link_1 = __importDefault(require("ink-link"));
-// import { execSync } from "child_process";
+const child_process_1 = require("child_process");
 const httpLink = new client_1.HttpLink({
     fetch: cross_fetch_1.default,
     uri: "https://api.linear.app/graphql",
@@ -55,17 +55,19 @@ exports.client = new client_1.ApolloClient({
     link: authLink.concat(httpLink),
     cache: new client_1.InMemoryCache()
 });
-const gitBranchCreateSteps = [
-    "Creating branch...",
-    "Switching to branch...",
-    "Pushing branch...",
-    "Branch created successfully! You can start Working now",
-];
+const gitBranchCreateSteps = {
+    check: "Check if branch exists...",
+    create: "Creating and switching to branch...",
+    switch: "Switching to branch...",
+    push: "Pushing branch...",
+    draft: "Creating a Draft PR...",
+    success: "Branch created successfully! You can start Working now",
+};
 const App = () => {
     const [value, setValue] = (0, react_1.useState)("");
     const [response, setResponse] = (0, react_1.useState)("");
     const [loading, setLoading] = (0, react_1.useState)(false);
-    const [gitBranchCreateStep, setGitBranchCreateStep] = (0, react_1.useState)(gitBranchCreateSteps[0]);
+    const [gitBranchCreateStep, setGitBranchCreateStep] = (0, react_1.useState)(gitBranchCreateSteps.check);
     const [creatingBranch, setCreatingBranch] = (0, react_1.useState)(false);
     const [selected, setSelected] = (0, react_1.useState)();
     const [loaded, setLoaded] = (0, react_1.useState)(false);
@@ -128,18 +130,23 @@ const App = () => {
         setLoading(true);
         if (value === "Y" || value === "y" || value === "") {
             setCreatingBranch(true);
-            // const branchName = selected?.split("~~~")[2];
-            setGitBranchCreateStep(gitBranchCreateSteps[1]);
-            // setGitBranchCreateStep(execSync(`git ls-remote origin ${selected}`).toString())
-            // execSync(`git checkout -b }`);
-            setTimeout(() => {
-                setTimeout(() => {
-                    setGitBranchCreateStep(gitBranchCreateSteps[2]);
-                    setTimeout(() => {
-                        setGitBranchCreateStep(gitBranchCreateSteps[3]);
-                    }, 1000);
-                }, 1000);
-            }, 1000);
+            setGitBranchCreateStep(gitBranchCreateSteps.check);
+            const remoteBranchExists = (0, child_process_1.execSync)(`git ls-remote origin ${selected}`).toString();
+            console.log("HIER: ", remoteBranchExists, remoteBranchExists.length);
+            if (remoteBranchExists) {
+                setGitBranchCreateStep(gitBranchCreateSteps.switch);
+                (0, child_process_1.execSync)(`git checkout ${selected}`);
+            }
+            else {
+                setGitBranchCreateStep(gitBranchCreateSteps.create);
+                (0, child_process_1.execSync)(`git checkout -b ${selected}`);
+                setGitBranchCreateStep(gitBranchCreateSteps.push);
+                (0, child_process_1.execSync)(`git push --set-upstream origin ${selected}`);
+            }
+            // setGitBranchCreateStep(gitBranchCreateSteps.draft);
+            // const selectedIssue = issues.find(i => i.branchName === selected);
+            // execSync(`gh pr create -d -t "${`${selectedIssue?.number ?? ""} - ${selectedIssue?.title ?? ""}`}" -f -b origin`);
+            setGitBranchCreateStep(gitBranchCreateSteps.success);
         }
         else if (value === "N" || value === "n") {
             setCreatingBranch(false);
@@ -155,9 +162,9 @@ const App = () => {
             react_1.default.createElement(ink_select_input_1.default, { items: data, limit: 5, onSelect: selectIssue, itemComponent: ItemComponent }),
         loading && creatingBranch &&
             react_1.default.createElement(ink_task_list_1.TaskList, null,
-                gitBranchCreateStep !== gitBranchCreateSteps[gitBranchCreateSteps.length - 1] && react_1.default.createElement(ink_task_list_1.Task, { label: "Loading", state: "loading", output: gitBranchCreateStep, spinner: cli_spinners_1.default.arc }),
-                gitBranchCreateStep === gitBranchCreateSteps[gitBranchCreateSteps.length - 1] && react_1.default.createElement(ink_task_list_1.Task, { label: gitBranchCreateSteps[gitBranchCreateSteps.length - 1], state: "success" })),
-        loaded && selected && !loading && gitBranchCreateStep !== gitBranchCreateSteps[gitBranchCreateSteps.length - 1] &&
+                gitBranchCreateStep !== gitBranchCreateSteps.success && react_1.default.createElement(ink_task_list_1.Task, { label: "Loading", state: "loading", output: gitBranchCreateStep, spinner: cli_spinners_1.default.arc }),
+                gitBranchCreateStep === gitBranchCreateSteps.success && react_1.default.createElement(ink_task_list_1.Task, { label: gitBranchCreateSteps.success, state: "success" })),
+        loaded && selected && !loading && gitBranchCreateStep !== gitBranchCreateSteps.success &&
             react_1.default.createElement(react_1.default.Fragment, null,
                 react_1.default.createElement(ink_1.Text, null,
                     "Start work on: ",
