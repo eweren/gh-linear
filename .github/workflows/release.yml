@@ -1,14 +1,24 @@
-name: release
+name: Publish package to npm
 on:
   push:
+    branches:
+      - main
     tags:
-      - "v*"
-permissions:
-  contents: write
+      - v*
 
 jobs:
-  release:
+  publish:
     runs-on: ubuntu-latest
     steps:
-      - uses: actions/checkout@v2
-      - uses: cli/gh-extension-precompile@v1
+      - uses: actions/checkout@v1
+      - uses: actions/setup-node@v1
+        with:
+          node-version: 12
+      - run: npm install
+      - uses: actions/setup-node@v2
+        with:
+          node-version: '16.x'
+          registry-url: 'https://registry.npmjs.org'
+      - run: npm publish --access public
+        env:
+          NODE_AUTH_TOKEN: ${{secrets.NPM_TOKEN}}
