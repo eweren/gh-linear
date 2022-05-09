@@ -1,6 +1,6 @@
 {
 	"name": "gh-linear",
-	"version": "0.0.0",
+	"version": "0.0.2",
 	"license": "MIT",
 	"engines": {
 		"node": ">=10"
@@ -12,7 +12,8 @@
 		"test": "xo && ava"
 	},
 	"files": [
-		"dist/cli.js"
+		"dist/cli.js",
+		"dist/ui.js"
 	],
 	"main": "dist/cli.js",
 	"bin": {
@@ -22,6 +23,7 @@
 		"@apollo/client": "^3.6.2",
 		"chalk-pipe": "^5.1.1",
 		"cross-fetch": "^3.1.5",
+		"gh-linear": "^0.0.0",
 		"graphql": "^16.4.0",
 		"ink": "^3.2.0",
 		"ink-color-pipe": "^3.0.0",
@@ -53,9 +55,9 @@
 	},
 	"fig": {
 		"": {
-				"description": "Only command -> Start a git branch and push to remote right from your linear ticket",
-				"icon": "🧪",
-				"priority": 100
+			"description": "Only command -> Start a git branch and push to remote right from your linear ticket",
+			"icon": "🧪",
+			"priority": 100
 		}
 	},
 	"devDependencies": {
