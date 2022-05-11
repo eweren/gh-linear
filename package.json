@@ -13,6 +13,10 @@
 	},
 	"files": [
 		"dist/cli.js",
+		"dist/views/issueSelection.js",
+		"dist/hooks/useFullHeight.js",
+		"dist/components/selectionListItem.js",
+		"dist/cli.js",
 		"dist/ui.js"
 	],
 	"main": "dist/cli.js",

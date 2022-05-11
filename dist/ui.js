@@ -32,11 +32,10 @@ const ink_text_input_1 = __importDefault(require("ink-text-input"));
 const ink_spinner_1 = __importDefault(require("ink-spinner"));
 const client_1 = require("@apollo/client");
 const cross_fetch_1 = __importDefault(require("cross-fetch"));
-const ink_select_input_1 = __importDefault(require("ink-select-input"));
 const ink_task_list_1 = require("ink-task-list");
 const cli_spinners_1 = __importDefault(require("cli-spinners"));
-const ink_link_1 = __importDefault(require("ink-link"));
 const child_process_1 = require("child_process");
+const issueSelection_1 = require("./views/issueSelection");
 const configFilePath = "~/.gh/linear/config.yaml";
 const gitBranchCreateSteps = {
     check: "Check if branch exists...",
@@ -52,23 +51,32 @@ const App = () => {
     const [linearApiToken, setLinearApiToken] = (0, react_1.useState)("");
     const [linearApiTokenPresent, setLinearApiTokenPresent] = (0, react_1.useState)(false);
     const [loading, setLoading] = (0, react_1.useState)(false);
+    const [isGitRepo, setIsGitRepo] = (0, react_1.useState)(false);
     const [gitBranchCreateStep, setGitBranchCreateStep] = (0, react_1.useState)(gitBranchCreateSteps.check);
     const [creatingBranch, setCreatingBranch] = (0, react_1.useState)(false);
     const [selected, setSelected] = (0, react_1.useState)();
     const [loaded, setLoaded] = (0, react_1.useState)(false);
     const [issues, setIssues] = (0, react_1.useState)([]);
     const [data, setData] = (0, react_1.useState)([]);
+    const [filterForMyIssues, setFilterForMyIssues] = (0, react_1.useState)(false);
     const [appheight, setHeight] = (0, react_1.useState)(50);
     (0, react_1.useEffect)(() => {
         if (!linearApiToken) {
             return;
         }
+        setFilterForMyIssues(false);
     }, [linearApiToken]);
     (0, react_1.useEffect)(() => {
         const intervalStatusCheck = setInterval(() => {
             setHeight(process.stdout.rows);
         }, 1000);
         setHeight(process.stdout.rows);
+        if ((0, child_process_1.execSync)('git -C . rev-parse 2>/dev/null; echo $?').toString().trim() === "0") {
+            setIsGitRepo(true);
+        }
+        else {
+            setIsGitRepo(false);
+        }
         return () => {
             clearInterval(intervalStatusCheck);
         };
@@ -88,38 +96,51 @@ const App = () => {
             cache: new client_1.InMemoryCache()
         });
         const response = await client.query({ query: (0, client_1.gql) `
-			query MyIssues($filter: IssueFilter) {
-				issues(filter: $filter) {
+			query MyIssues($filter: IssueFilter, $first: Int) {
+				issues(filter: $filter, first: $first) {
 					nodes {
 						id
 						title
 						number
 						priority
-						dueDate
 						branchName
 						state {
 							name
 							color
 							position
+							type
 						}
 						team {
 							key
 						}
 						url
+						integrationResources {
+							nodes {
+								pullRequest {
+									url
+								}
+							}
+						}
 					}
 				}
 			}
 		`, variables: {
                 "filter": {
+                    "state": {
+                        "type": {
+                            "neq": "canceled"
+                        }
+                    },
                     "assignee": {
                         "isMe": {
-                            "eq": true
+                            "eq": filterForMyIssues
                         }
                     },
                     "completedAt": {
                         "null": true
                     }
-                }
+                },
+                first: 50
             } });
         if ((_a = response === null || response === void 0 ? void 0 : response.data) === null || _a === void 0 ? void 0 : _a.issues) {
             let is = response.data.issues.nodes.slice().filter(n => n.branchName.includes(value.toLowerCase()));
@@ -128,7 +149,7 @@ const App = () => {
             }
             is = is.sort((a, b) => a.state.position === b.state.position ? b.priority - a.priority : b.state.position - a.state.position);
             setIssues(is);
-            setData(is.map(issue => ({ label: `${issue.url}~~~${issue.team.key}-${`${issue.number}`.padEnd(4)} ${issue.title}~~~${issue.branchName}`, value: issue.id })));
+            setData(is.map(issue => ({ label: JSON.stringify(issue), value: issue.id })));
             setLoaded(true);
             setLoading(false);
             return true;
@@ -178,25 +199,31 @@ const App = () => {
         else if (value === "N" || value === "n") {
             setCreatingBranch(false);
             setSelected(undefined);
-            setLoading(false);
+            setResponse("");
         }
+        setLoading(false);
     };
     const saveLinearToken = (value) => {
         (0, child_process_1.execSync)(`echo ${value} > ${configFilePath}`);
         setLinearApiTokenPresent(true);
     };
+    if (!isGitRepo) {
+        return react_1.default.createElement(ink_1.Box, { marginY: 1, flexDirection: 'column' },
+            react_1.default.createElement(ink_1.Text, { color: "magentaBright", bold: true }, "This command can only be executed from a git directory."));
+    }
     if (!linearApiTokenPresent) {
         return react_1.default.createElement(ink_1.Box, { marginY: 1, flexDirection: 'column' },
             react_1.default.createElement(ink_1.Text, { color: "blue", bold: true }, "Please provide your Linear API token."),
             react_1.default.createElement(ink_1.Text, { color: "gray" }, "The token will only be saved locally."),
             react_1.default.createElement(ink_text_input_1.default, { value: linearApiToken, placeholder: "lin_api_...", onChange: setLinearApiToken, onSubmit: saveLinearToken }));
     }
+    if (loaded && !selected) {
+        return react_1.default.createElement(issueSelection_1.IssueSelection, { data: data, onSelect: selectIssue });
+    }
     return (react_1.default.createElement(ink_1.Box, { height: appheight, alignItems: 'flex-start', justifyContent: 'flex-start' },
         loading && !creatingBranch && react_1.default.createElement(ink_1.Box, null,
             react_1.default.createElement(ink_spinner_1.default, { type: "arc" }),
             react_1.default.createElement(ink_1.Text, null, "  Loading...")),
-        loaded && !selected &&
-            react_1.default.createElement(ink_select_input_1.default, { items: data, limit: 5, onSelect: selectIssue, itemComponent: ItemComponent }),
         loading && creatingBranch &&
             react_1.default.createElement(ink_task_list_1.TaskList, null,
                 gitBranchCreateStep !== gitBranchCreateSteps.success && react_1.default.createElement(ink_task_list_1.Task, { label: "Loading", state: "loading", output: gitBranchCreateStep, spinner: cli_spinners_1.default.arc }),
@@ -206,15 +233,11 @@ const App = () => {
                 react_1.default.createElement(ink_1.Text, null,
                     "Start work on: ",
                     react_1.default.createElement(ink_1.Text, { color: "blue" }, selected),
-                    " (Y/n)"),
+                    " (Y/n) "),
                 react_1.default.createElement(ink_text_input_1.default, { value: response, onChange: setResponse, onSubmit: handleResponse })),
         !loaded && !selected && !loading && react_1.default.createElement(ink_1.Box, { marginY: 1 },
             react_1.default.createElement(ink_1.Text, { color: "blue", bold: true }, "Filter for Ticket/Project/Title: "),
             react_1.default.createElement(ink_text_input_1.default, { value: value, placeholder: "(Empty to show all)", onChange: setValue, onSubmit: handleSubmit }))));
-};
-const ItemComponent = (props) => {
-    return react_1.default.createElement(ink_link_1.default, { url: props.label.split("~~~")[0] },
-        react_1.default.createElement(ink_1.Text, { color: "blue" }, props.label.split("~~~")[1]));
 };
 module.exports = App;
 exports.default = App;
