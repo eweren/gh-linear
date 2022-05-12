@@ -1,0 +1,20 @@
+name: release gh package
+on:
+  push:
+    tags:
+      - "v*"
+permissions:
+  contents: write
+
+jobs:
+  release:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v2
+      - uses: actions/setup-node@v1
+        with:
+          node-version: 12
+      - run: npm run buildBinary
+      - uses: cli/gh-extension-precompile@v1
+        with:
+          build_script_override: "dist/index.js"
