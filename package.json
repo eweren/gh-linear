@@ -7,7 +7,6 @@
 	},
 	"scripts": {
 		"build": "tsc && chmod +x dist/cli.js",
-		"buildBinary": "ncc build source/cli.tsx",
 		"start": "npm run build && dist/cli.js",
 		"pretest": "npm run build",
 		"test": "xo && ava"
@@ -26,7 +25,6 @@
 	},
 	"dependencies": {
 		"@apollo/client": "^3.6.2",
-		"@vercel/ncc": "^0.33.4",
 		"chalk-pipe": "^5.1.1",
 		"cross-fetch": "^3.1.5",
 		"gh-linear": "^0.0.0",
