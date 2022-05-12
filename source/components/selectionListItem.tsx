@@ -19,7 +19,7 @@ export const ItemComponent: FC<ItemProps> = (props) => {
     </Text>
 
     <Text bold={true}>
-      <Transform transform={chalk.hex(state.color ?? "#FFF")}>
+      <Transform transform={chalk.hex(state.color ? state.color : "#FFF")}>
         {status === "backlog" && '◌ '}
         {status === "unstarted" && '◯ '}
         {status === "started" && '◑ '}
@@ -32,7 +32,7 @@ export const ItemComponent: FC<ItemProps> = (props) => {
       </Text>
     {dueDate !== "null" && <Box marginLeft={1}>
       <Text>
-        <Transform transform={chalk.hex(state.color ?? "#FFF")}>
+        <Transform transform={chalk.hex(state.color ? state.color : "#FFF")}>
           {dueDate}
         </Transform>
       </Text>
