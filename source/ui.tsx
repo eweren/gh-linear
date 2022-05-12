@@ -129,11 +129,11 @@ const App: FC = () => {
 
 		if (value) {
 			if (/^\w{3}.\d+$/.test(value)) {
-				variables["filter"] = {and: { team: {key: { eq: value.match(/\w{3}/)?.length ? value.match(/\w{3}/)![0]!.toUpperCase() : undefined }}, number: {eq: value.match(/\d+/)?.length ? parseInt(value.match(/\d+/)![0]!) : undefined}}};
+				variables["filter"] = {and: { team: {key: { eq: /\w{3}/.test(value) ? value.match(/\w{3}/)![0]!.toUpperCase() : undefined }}, number: {eq: /\d+/.test(value) ? parseInt(value.match(/\d+/)![0]!) : undefined}}};
 			} else if (/^\w{3}$/.test(value)) {
 				variables["filter"]["team"] = {key: { eq: value.toUpperCase() }};
 			} else {
-				variables["filter"]["or"] = {title: {contains: value}, team: {key: { eq: value.match(/\w{3}/)?.length ? value.match(/\w{3}/)![0]!.toUpperCase() : undefined }}, number: {eq: value.match(/\d+/)?.length ? parseInt(value.match(/\d+/)![0]!) : undefined}};
+				variables["filter"]["or"] = {title: {contains: value}, team: {key: { eq: /\w{3}/.test(value) ? value.match(/\w{3}/)![0]!.toUpperCase() : undefined }}, number: {eq: /\d+/.test(value) ? parseInt(value.match(/\d+/)![0]!) : undefined}};
 			}
 		}
 
@@ -169,7 +169,7 @@ const App: FC = () => {
 		`, variables});
 
 
-    if (response?.data?.issues) {
+    if (response && response.data && response.data.issues) {
 			// let is = (response.data.issues.nodes as typeof issues).slice().filter(n => n.branchName.includes(value.toLowerCase()))
 			// if (is.length === 0) {
 			// 	is = (response.data.issues.nodes as typeof issues).slice();
@@ -206,7 +206,10 @@ const App: FC = () => {
 	}, []);
 
 	const selectIssue = (item: Item<string>) => {
-		setSelected(issues.find(i => i.id === item.value)?.branchName);
+		const issue = issues.find(i => i.id === item.value);
+		if (issue) {
+			setSelected(issue.branchName);
+		}
 	}
 
 	const handleResponse = (value: string) => {

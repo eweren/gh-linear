@@ -21,7 +21,7 @@ export const IssueSelection: FC<{data: {label: string, value: string}[], onAbort
   }, [props.data]);
 
   useEffect(() => {
-    if (highlightedItem?.label) {
+    if (highlightedItem && highlightedItem.label) {
       setSelectedItem(JSON.parse(highlightedItem.label));
     } else {
       setSelectedItem(undefined);
@@ -34,14 +34,14 @@ export const IssueSelection: FC<{data: {label: string, value: string}[], onAbort
     }
     const selectedItem = JSON.parse(highlightedItem.label) as LinearTicket;
 
-		if (input === 'S' || input === "s") {
-      props.onSelect?.(highlightedItem);
+		if ((input === 'S' || input === "s") && props.onSelect) {
+      props.onSelect(highlightedItem);
 		} else if (input === "V" || input === "v") {
       execSync(`open ${selectedItem.url}`);
-		} else if ((input === "P" || input === "p") && selectedItem?.integrationResources?.nodes?.[0]?.pullRequest?.url) {
+		} else if ((input === "P" || input === "p") && selectedItem && selectedItem.integrationResources.nodes[0] && selectedItem.integrationResources.nodes[0].pullRequest.url) {
       execSync(`open ${selectedItem.integrationResources.nodes[0].pullRequest.url}`);
-		} else if (input === "F" || input === "f") {
-      props.onAbort?.();
+		} else if ((input === "F" || input === "f") && props.onAbort) {
+      props.onAbort();
 		} else if (input === "Q" || input === "q") {
       exit();
       return;
@@ -68,7 +68,7 @@ export const IssueSelection: FC<{data: {label: string, value: string}[], onAbort
           <Text color="green">{"(S) to start working  "}</Text>
           <Text color="blue">{"(V) to view in browser  "}</Text>
           <Text color="yellow">{"(F) to search again  "}</Text>
-          {selectedItem?.integrationResources?.nodes?.[0]?.pullRequest?.url && <Text color="magenta">{"(P) to show PR  "}</Text>}
+          {selectedItem && selectedItem.integrationResources.nodes[0] && selectedItem.integrationResources.nodes[0].pullRequest.url && <Text color="magenta">{"(P) to show PR  "}</Text>}
       </Box>
       <Text color="grey">{"(Q) to quit  "}</Text>
     </Box>
