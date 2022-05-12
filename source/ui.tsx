@@ -1,5 +1,5 @@
 import React, {FC, useEffect, useState} from 'react';
-import {Box, Text } from 'ink';
+import {Box, Text, useApp } from 'ink';
 import TextInput from 'ink-text-input';
 import Spinner from 'ink-spinner';
 import { ApolloClient, gql, HttpLink, InMemoryCache } from '@apollo/client';
@@ -56,13 +56,14 @@ const App: FC = () => {
 	const [linearApiTokenPresent, setLinearApiTokenPresent] = useState(false);
 	const [loading, setLoading] = useState(false);
 	const [isGitRepo, setIsGitRepo] = useState(false);
-	const [gitBranchCreateStep, setGitBranchCreateStep] = useState(gitBranchCreateSteps.check);
+	const [gitBranchCreateStep, setGitBranchCreateStep] = useState<string>();
 	const [creatingBranch, setCreatingBranch] = useState(false);
 	const [selected, setSelected] = useState<string | undefined>();
 	const [loaded, setLoaded] = useState(false);
 	const [issues, setIssues] = useState<LinearTicket[]>([]);
 	const [data, setData] = useState<{label: string, value: string}[]>([]);
 	const [filterForMyIssues, setFilterForMyIssues] = useState(false);
+	const {exit} = useApp();
 
 	const [appheight, setHeight] = useState<number>(50);
 
@@ -216,26 +217,28 @@ const App: FC = () => {
 		setLoading(true);
 		if (value === "Y" || value === "y" || value === "") {
 			setCreatingBranch(true);
-			setGitBranchCreateStep(gitBranchCreateSteps.check);
 
 			const remoteBranchExists = execSync(`git ls-remote origin ${selected}`).toString();
+			setGitBranchCreateStep(gitBranchCreateSteps.check);
 
 			if (remoteBranchExists) {
-				setGitBranchCreateStep(gitBranchCreateSteps.switch);
 				execSync(`git checkout ${selected}`);
+				setGitBranchCreateStep(gitBranchCreateSteps.switch);
 			} else {
-				setGitBranchCreateStep(gitBranchCreateSteps.create);
 				execSync(`git checkout -b ${selected}`);
-				setGitBranchCreateStep(gitBranchCreateSteps.push);
+				setGitBranchCreateStep(gitBranchCreateSteps.create);
 				execSync(`git push --set-upstream origin ${selected}`);
+				setGitBranchCreateStep(gitBranchCreateSteps.push);
 			}
 			setGitBranchCreateStep(gitBranchCreateSteps.success);
-		} else if (value === "N" || value === "n") {
+			setLoading(false);
+			exit();
+		} else {
 			setCreatingBranch(false);
 			setSelected(undefined);
 			setResponse("");
+			setLoading(false);
 		}
-		setLoading(false);
 	}
 
 	const saveLinearToken = (value: string) => {
@@ -268,20 +271,21 @@ const App: FC = () => {
 				<Text>  Loading...</Text>
 			</Box>
 			}
-			{loading && creatingBranch &&
+			{gitBranchCreateStep && <Box marginTop={2}>
 				<TaskList>
-        {gitBranchCreateStep !== gitBranchCreateSteps.success && <Task
-            label="Loading"
-            state="loading"
-						output={gitBranchCreateStep}
-            spinner={spinners.arc}
-        />}
+					{gitBranchCreateStep !== gitBranchCreateSteps.success && <Task
+							label="Loading"
+							state="loading"
+							output={gitBranchCreateStep}
+							spinner={spinners.arc}
+					/>}
 
-        {gitBranchCreateStep === gitBranchCreateSteps.success &&<Task
-            label={gitBranchCreateSteps.success!}
-            state="success"
-        />}
-    </TaskList>
+					{gitBranchCreateStep === gitBranchCreateSteps.success &&<Task
+							label={gitBranchCreateSteps.success!}
+							state="success"
+					/>}
+				</TaskList>
+			</Box>
 			}
 			{loaded && selected && !loading && gitBranchCreateStep !== gitBranchCreateSteps.success &&
 				<>
