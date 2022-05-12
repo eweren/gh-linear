@@ -106,6 +106,37 @@ const App: FC = () => {
 			cache: new InMemoryCache()
 		});
 
+		const variables: any = {
+			"filter": {
+				"state": {
+					"type": {
+						"neq": "canceled"
+					}
+				},
+				"completedAt": {
+					"null": true
+				}
+			},
+			first: 75
+		}
+		if (filterForMyIssues) {
+			variables["filter"]["assignee"] = {
+				"isMe": {
+					"eq": filterForMyIssues ? true : undefined
+				}
+			};
+		}
+
+		if (value) {
+			if (/^\w{3}.\d+$/.test(value)) {
+				variables["filter"] = {and: { team: {key: { eq: value.match(/\w{3}/)?.length ? value.match(/\w{3}/)![0]!.toUpperCase() : undefined }}, number: {eq: value.match(/\d+/)?.length ? parseInt(value.match(/\d+/)![0]!) : undefined}}};
+			} else if (/^\w{3}$/.test(value)) {
+				variables["filter"]["team"] = {key: { eq: value.toUpperCase() }};
+			} else {
+				variables["filter"]["or"] = {title: {contains: value}, team: {key: { eq: value.match(/\w{3}/)?.length ? value.match(/\w{3}/)![0]!.toUpperCase() : undefined }}, number: {eq: value.match(/\d+/)?.length ? parseInt(value.match(/\d+/)![0]!) : undefined}};
+			}
+		}
+
 		const response = await client.query({query: gql`
 			query MyIssues($filter: IssueFilter, $first: Int) {
 				issues(filter: $filter, first: $first) {
@@ -135,31 +166,15 @@ const App: FC = () => {
 					}
 				}
 			}
-		`, variables: {
-			"filter": {
-				"state": {
-					"type": {
-						"neq": "canceled"
-					}
-				},
-				"assignee": {
-					"isMe": {
-						"eq": filterForMyIssues
-					}
-				},
-				"completedAt": {
-					"null": true
-				}
-			},
-			first: 50
-		}});
+		`, variables});
 
 
     if (response?.data?.issues) {
-			let is = (response.data.issues.nodes as typeof issues).slice().filter(n => n.branchName.includes(value.toLowerCase()))
-			if (is.length === 0) {
-				is = (response.data.issues.nodes as typeof issues).slice();
-			}
+			// let is = (response.data.issues.nodes as typeof issues).slice().filter(n => n.branchName.includes(value.toLowerCase()))
+			// if (is.length === 0) {
+			// 	is = (response.data.issues.nodes as typeof issues).slice();
+			// }
+			let is = (response.data.issues.nodes as typeof issues).slice();
 			is = is.sort((a, b) => a.state.position === b.state.position ? b.priority - a.priority : b.state.position - a.state.position);
 			setIssues(is);
 			setData(is.map(issue => ({ label: JSON.stringify(issue), value: issue.id})));
@@ -240,7 +255,7 @@ const App: FC = () => {
 	}
 
 	if (loaded && !selected) {
-		return <IssueSelection data={data} onSelect={selectIssue} />
+		return <IssueSelection data={data} onAbort={() => {setLoaded(false)}} onSelect={selectIssue} />
 	}
 
 	return (

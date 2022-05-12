@@ -42,7 +42,7 @@ const IssueSelection = (props) => {
     const [highlightedItem, setHighlightedItem] = (0, react_1.useState)();
     const [selectedItem, setSelectedItem] = (0, react_1.useState)();
     (0, react_1.useEffect)(() => {
-        console.log(props.data);
+        setHighlightedItem(props.data[0]);
     }, [props.data]);
     (0, react_1.useEffect)(() => {
         if (highlightedItem === null || highlightedItem === void 0 ? void 0 : highlightedItem.label) {
@@ -53,7 +53,7 @@ const IssueSelection = (props) => {
         }
     }, [highlightedItem]);
     (0, ink_1.useInput)((input, key) => {
-        var _a, _b, _c, _d, _e;
+        var _a, _b, _c, _d, _e, _f;
         if (!highlightedItem) {
             return;
         }
@@ -67,6 +67,9 @@ const IssueSelection = (props) => {
         else if ((input === "P" || input === "p") && ((_e = (_d = (_c = (_b = selectedItem === null || selectedItem === void 0 ? void 0 : selectedItem.integrationResources) === null || _b === void 0 ? void 0 : _b.nodes) === null || _c === void 0 ? void 0 : _c[0]) === null || _d === void 0 ? void 0 : _d.pullRequest) === null || _e === void 0 ? void 0 : _e.url)) {
             (0, child_process_1.execSync)(`open ${selectedItem.integrationResources.nodes[0].pullRequest.url}`);
         }
+        else if (input === "F" || input === "f") {
+            (_f = props.onAbort) === null || _f === void 0 ? void 0 : _f.call(props);
+        }
         else if (input === "Q" || input === "q") {
             exit();
             return;
@@ -76,17 +79,19 @@ const IssueSelection = (props) => {
         }
     });
     return (react_1.default.createElement(ink_1.Box, { flexDirection: 'column' },
-        react_1.default.createElement(ink_1.Box, { flexDirection: 'row', justifyContent: 'space-between', borderStyle: 'round' },
+        react_1.default.createElement(ink_1.Box, { flexDirection: 'row', justifyContent: 'space-between', borderStyle: 'round', marginRight: 5 },
             react_1.default.createElement(ink_1.Box, { flexDirection: 'row' },
                 react_1.default.createElement(ink_1.Text, { color: "green" }, "  ID".padEnd(12)),
                 react_1.default.createElement(ink_1.Text, { color: "green" }, "Status".padEnd(22)),
                 react_1.default.createElement(ink_1.Text, { color: "green" }, "Title")),
             react_1.default.createElement(ink_1.Text, { color: "green" }, "Due Date".padEnd(16))),
         react_1.default.createElement(build_1.default, { items: props.data, limit: fullHeight - 6, onHighlight: setHighlightedItem, onSelect: props.onSelect, itemComponent: selectionListItem_1.ItemComponent }),
-        react_1.default.createElement(ink_1.Box, { flexDirection: 'row', marginTop: Math.max(0, fullHeight - 6 - props.data.length), justifyContent: 'space-between', borderStyle: 'round' },
+        react_1.default.createElement(ink_1.Box, { flexDirection: 'row', marginTop: Math.max(0, fullHeight - 6 - props.data.length), marginRight: 5, justifyContent: 'space-between', borderStyle: 'round' },
             react_1.default.createElement(ink_1.Box, { flexDirection: 'row', paddingLeft: 2 },
                 react_1.default.createElement(ink_1.Text, { color: "green" }, "(S) to start working  "),
                 react_1.default.createElement(ink_1.Text, { color: "blue" }, "(V) to view in browser  "),
-                ((_d = (_c = (_b = (_a = selectedItem === null || selectedItem === void 0 ? void 0 : selectedItem.integrationResources) === null || _a === void 0 ? void 0 : _a.nodes) === null || _b === void 0 ? void 0 : _b[0]) === null || _c === void 0 ? void 0 : _c.pullRequest) === null || _d === void 0 ? void 0 : _d.url) && react_1.default.createElement(ink_1.Text, { color: "magenta" }, "(P) to show PR  ")))));
+                react_1.default.createElement(ink_1.Text, { color: "yellow" }, "(F) to search again  "),
+                ((_d = (_c = (_b = (_a = selectedItem === null || selectedItem === void 0 ? void 0 : selectedItem.integrationResources) === null || _a === void 0 ? void 0 : _a.nodes) === null || _b === void 0 ? void 0 : _b[0]) === null || _c === void 0 ? void 0 : _c.pullRequest) === null || _d === void 0 ? void 0 : _d.url) && react_1.default.createElement(ink_1.Text, { color: "magenta" }, "(P) to show PR  ")),
+            react_1.default.createElement(ink_1.Text, { color: "grey" }, "(Q) to quit  "))));
 };
 exports.IssueSelection = IssueSelection;

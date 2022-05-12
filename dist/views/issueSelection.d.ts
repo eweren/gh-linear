@@ -6,5 +6,6 @@ export declare const IssueSelection: FC<{
         label: string;
         value: string;
     }[];
+    onAbort?: () => void;
     onSelect?: (item: Item<string>) => void;
 }>;

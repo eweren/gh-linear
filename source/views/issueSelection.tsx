@@ -8,7 +8,7 @@ import { execSync } from "child_process";
 import { LinearTicket } from '../ui';
 
 /** use the label in the following form: url~~~title~~~branchName~~colorCode~~~state~~~dueDate */
-export const IssueSelection: FC<{data: {label: string, value: string}[], onSelect?: (item: Item<string>) => void}> = (props) => {
+export const IssueSelection: FC<{data: {label: string, value: string}[], onAbort?: () => void; onSelect?: (item: Item<string>) => void}> = (props) => {
   const fullHeight = useFullHeight();
 	const {exit} = useApp();
   // const [issues] = useState(props.data.map((d) => JSON.parse(d.label)) as unknown as LinearTicket);
@@ -17,7 +17,7 @@ export const IssueSelection: FC<{data: {label: string, value: string}[], onSelec
   const [selectedItem, setSelectedItem] = useState<LinearTicket>();
 
   useEffect(() => {
-    console.log(props.data);
+    setHighlightedItem(props.data[0]);
   }, [props.data]);
 
   useEffect(() => {
@@ -40,6 +40,8 @@ export const IssueSelection: FC<{data: {label: string, value: string}[], onSelec
       execSync(`open ${selectedItem.url}`);
 		} else if ((input === "P" || input === "p") && selectedItem?.integrationResources?.nodes?.[0]?.pullRequest?.url) {
       execSync(`open ${selectedItem.integrationResources.nodes[0].pullRequest.url}`);
+		} else if (input === "F" || input === "f") {
+      props.onAbort?.();
 		} else if (input === "Q" || input === "q") {
       exit();
       return;
@@ -52,22 +54,23 @@ export const IssueSelection: FC<{data: {label: string, value: string}[], onSelec
 
 
 	return (<Box flexDirection='column'>
-    <Box flexDirection='row' justifyContent='space-between' borderStyle='round'>
+    <Box flexDirection='row' justifyContent='space-between' borderStyle='round' marginRight={5}>
       <Box flexDirection='row'>
-          <Text color="green">{"  ID".padEnd(12)}</Text>
-          <Text color="green">{"Status".padEnd(22)}</Text>
-          <Text color="green">Title</Text>
+        <Text color="green">{"  ID".padEnd(12)}</Text>
+        <Text color="green">{"Status".padEnd(22)}</Text>
+        <Text color="green">Title</Text>
       </Box>
       <Text color="green">{"Due Date".padEnd(16)}</Text>
     </Box>
     <SelectInput items={props.data} limit={fullHeight - 6} onHighlight={setHighlightedItem} onSelect={props.onSelect} itemComponent={ItemComponent} />
-    <Box flexDirection='row' marginTop={Math.max(0, fullHeight - 6 - props.data.length)} justifyContent='space-between' borderStyle='round'>
+    <Box flexDirection='row' marginTop={Math.max(0, fullHeight - 6 - props.data.length)} marginRight={5} justifyContent='space-between' borderStyle='round'>
       <Box flexDirection='row'paddingLeft={2}>
           <Text color="green">{"(S) to start working  "}</Text>
           <Text color="blue">{"(V) to view in browser  "}</Text>
+          <Text color="yellow">{"(F) to search again  "}</Text>
           {selectedItem?.integrationResources?.nodes?.[0]?.pullRequest?.url && <Text color="magenta">{"(P) to show PR  "}</Text>}
-          {/* <Text color="grey">{"(Q) to quit  "}</Text> */}
       </Box>
+      <Text color="grey">{"(Q) to quit  "}</Text>
     </Box>
   </Box>
 )};

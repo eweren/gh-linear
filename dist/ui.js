@@ -82,7 +82,7 @@ const App = () => {
         };
     }, []);
     const handleSubmit = async () => {
-        var _a;
+        var _a, _b, _c, _d, _e;
         setLoading(true);
         const httpLink = new client_1.HttpLink({
             fetch: cross_fetch_1.default,
@@ -95,6 +95,37 @@ const App = () => {
             link: httpLink,
             cache: new client_1.InMemoryCache()
         });
+        const variables = {
+            "filter": {
+                "state": {
+                    "type": {
+                        "neq": "canceled"
+                    }
+                },
+                "completedAt": {
+                    "null": true
+                }
+            },
+            first: 75
+        };
+        if (filterForMyIssues) {
+            variables["filter"]["assignee"] = {
+                "isMe": {
+                    "eq": filterForMyIssues ? true : undefined
+                }
+            };
+        }
+        if (value) {
+            if (/^\w{3}.\d+$/.test(value)) {
+                variables["filter"] = { and: { team: { key: { eq: ((_a = value.match(/\w{3}/)) === null || _a === void 0 ? void 0 : _a.length) ? value.match(/\w{3}/)[0].toUpperCase() : undefined } }, number: { eq: ((_b = value.match(/\d+/)) === null || _b === void 0 ? void 0 : _b.length) ? parseInt(value.match(/\d+/)[0]) : undefined } } };
+            }
+            else if (/^\w{3}$/.test(value)) {
+                variables["filter"]["team"] = { key: { eq: value.toUpperCase() } };
+            }
+            else {
+                variables["filter"]["or"] = { title: { contains: value }, team: { key: { eq: ((_c = value.match(/\w{3}/)) === null || _c === void 0 ? void 0 : _c.length) ? value.match(/\w{3}/)[0].toUpperCase() : undefined } }, number: { eq: ((_d = value.match(/\d+/)) === null || _d === void 0 ? void 0 : _d.length) ? parseInt(value.match(/\d+/)[0]) : undefined } };
+            }
+        }
         const response = await client.query({ query: (0, client_1.gql) `
 			query MyIssues($filter: IssueFilter, $first: Int) {
 				issues(filter: $filter, first: $first) {
@@ -124,29 +155,13 @@ const App = () => {
 					}
 				}
 			}
-		`, variables: {
-                "filter": {
-                    "state": {
-                        "type": {
-                            "neq": "canceled"
-                        }
-                    },
-                    "assignee": {
-                        "isMe": {
-                            "eq": filterForMyIssues
-                        }
-                    },
-                    "completedAt": {
-                        "null": true
-                    }
-                },
-                first: 50
-            } });
-        if ((_a = response === null || response === void 0 ? void 0 : response.data) === null || _a === void 0 ? void 0 : _a.issues) {
-            let is = response.data.issues.nodes.slice().filter(n => n.branchName.includes(value.toLowerCase()));
-            if (is.length === 0) {
-                is = response.data.issues.nodes.slice();
-            }
+		`, variables });
+        if ((_e = response === null || response === void 0 ? void 0 : response.data) === null || _e === void 0 ? void 0 : _e.issues) {
+            // let is = (response.data.issues.nodes as typeof issues).slice().filter(n => n.branchName.includes(value.toLowerCase()))
+            // if (is.length === 0) {
+            // 	is = (response.data.issues.nodes as typeof issues).slice();
+            // }
+            let is = response.data.issues.nodes.slice();
             is = is.sort((a, b) => a.state.position === b.state.position ? b.priority - a.priority : b.state.position - a.state.position);
             setIssues(is);
             setData(is.map(issue => ({ label: JSON.stringify(issue), value: issue.id })));
@@ -218,7 +233,7 @@ const App = () => {
             react_1.default.createElement(ink_text_input_1.default, { value: linearApiToken, placeholder: "lin_api_...", onChange: setLinearApiToken, onSubmit: saveLinearToken }));
     }
     if (loaded && !selected) {
-        return react_1.default.createElement(issueSelection_1.IssueSelection, { data: data, onSelect: selectIssue });
+        return react_1.default.createElement(issueSelection_1.IssueSelection, { data: data, onAbort: () => { setLoaded(false); }, onSelect: selectIssue });
     }
     return (react_1.default.createElement(ink_1.Box, { height: appheight, alignItems: 'flex-start', justifyContent: 'flex-start' },
         loading && !creatingBranch && react_1.default.createElement(ink_1.Box, null,
