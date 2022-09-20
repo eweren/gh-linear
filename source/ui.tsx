@@ -241,7 +241,7 @@ const App: FC = () => {
 			setGitBranchCreateStep(gitBranchCreateSteps.check);
 
 			if (remoteBranchExists) {
-				execSync(`git checkout ${selected}`);
+				execSync(`git checkout ${selected} &>/dev/null`);
 				setGitBranchCreateStep(gitBranchCreateSteps.switch);
 			} else {
 				const selectedIssue = issues.find(i => i.branchName === selected);
