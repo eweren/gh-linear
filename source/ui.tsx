@@ -247,9 +247,15 @@ const App: FC = () => {
 				const selectedIssue = issues.find(i => i.branchName === selected);
 				setGitBranchCreateStep(gitBranchCreateSteps.create);
 				execSync(`git checkout -b ${selected} &>/dev/null`);
-				execSync(`git stash --keep-index &>/dev/null`);
+				const hasChanges = !execSync(`git status`).toString().includes("working tree clean");
+				if (hasChanges) {
+					execSync(`git stash &>/dev/null`);
+				}
 				execSync(`git commit --allow-empty -m "Start working on ${selected}" &>/dev/null`);
-				execSync(`git stash apply &>/dev/null`);
+				if (hasChanges) {
+					execSync(`git stash apply --index &>/dev/null`);
+					execSync(`git stash drop stash@{0} &>/dev/null`);
+				}
 				setGitBranchCreateStep(gitBranchCreateSteps.push);
 				execSync(`git push --set-upstream origin ${selected} &>/dev/null`);
 				if (selectedIssue) {
