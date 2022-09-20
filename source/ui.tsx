@@ -12,6 +12,15 @@ import { IssueSelection } from './views/issueSelection';
 
 export type StatusType = "backlog" | "unstarted" | "started" | "canceled";
 
+const labelMapping = {
+	Refactor: "refactor",
+	Bug: "fix",
+	Feature: "feat",
+	Improvement: "chore",
+	Performance: "perf",
+	Testing: "test",
+	Documentation: "docs"
+}
 const configFilePath = "~/.gh/linear/config.yaml";
 
 const gitBranchCreateSteps = {
@@ -20,7 +29,7 @@ const gitBranchCreateSteps = {
 	switch: "Switching to branch...",
 	push: "Pushing branch...",
 	draft: "Creating a Draft PR...",
-	success: "Branch created successfully! You can start Working now",
+	success: "Branch created successfully! You can start working now",
 }
 
 export type LinearTicket = {
@@ -44,6 +53,11 @@ export type LinearTicket = {
 			}
 		}[]
 	},
+	labels: {
+		nodes: {
+			name: string
+		}[]
+	}
 	team: {
 		key: string
 	}
@@ -156,8 +170,13 @@ const App: FC = () => {
 						team {
 							key
 						}
+						labels(first: 1) {
+							nodes {
+								name
+							}
+						}
 						url
-						integrationResources {
+						integrationResources(first: 3) {
 							nodes {
 								pullRequest {
 									url
@@ -225,10 +244,19 @@ const App: FC = () => {
 				execSync(`git checkout ${selected}`);
 				setGitBranchCreateStep(gitBranchCreateSteps.switch);
 			} else {
-				execSync(`git checkout -b ${selected}`);
+				const selectedIssue = issues.find(i => i.branchName === selected);
 				setGitBranchCreateStep(gitBranchCreateSteps.create);
-				execSync(`git push --set-upstream origin ${selected}`);
+				execSync(`git checkout -b ${selected} &>/dev/null`);
+				execSync(`git stash --keep-index &>/dev/null`);
+				execSync(`git commit --allow-empty -m "Start working on ${selected}" &>/dev/null`);
+				execSync(`git stash apply &>/dev/null`);
 				setGitBranchCreateStep(gitBranchCreateSteps.push);
+				execSync(`git push --set-upstream origin ${selected} &>/dev/null`);
+				if (selectedIssue) {
+					const type = (labelMapping as any)[selectedIssue.labels.nodes[0]?.name ?? "Improvement"] as string;
+					execSync(`gh pr create --title "${type}(${selectedIssue.team.key}-${selectedIssue.number}): ${selectedIssue.title.toLowerCase()}" -d -b "IN PROGRESS" &>/dev/null`);
+					setGitBranchCreateStep(`gh pr create --title "${type}(${selectedIssue.team.key}-${selectedIssue.number}): ${selectedIssue.title.toLowerCase()}" -d`);
+				}
 			}
 			setGitBranchCreateStep(gitBranchCreateSteps.success);
 			setLoading(false);
