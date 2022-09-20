@@ -1,6 +1,6 @@
 {
 	"name": "gh-linear",
-	"version": "0.1.2",
+	"version": "0.2.0",
 	"license": "MIT",
 	"engines": {
 		"node": ">=10"
@@ -21,7 +21,8 @@
 	],
 	"main": "dist/cli.js",
 	"bin": {
-		"linhub": "./dist/cli.js"
+		"linhub": "./dist/cli.js",
+		"lh": "./dist/cli.js"
 	},
 	"dependencies": {
 		"@apollo/client": "^3.6.2",
