@@ -239,30 +239,30 @@ const App: FC = () => {
 
 			const remoteBranchExists = execSync(`git ls-remote origin ${selected}`).toString();
 			setGitBranchCreateStep(gitBranchCreateSteps.check);
+			const selectedIssue = issues.find(i => i.branchName === selected);
 
 			if (remoteBranchExists) {
 				execSync(`git checkout ${selected} &>/dev/null`);
 				setGitBranchCreateStep(gitBranchCreateSteps.switch);
-			} else {
-				const selectedIssue = issues.find(i => i.branchName === selected);
+			} else if (selectedIssue) {
+				const type = (labelMapping as any)[selectedIssue.labels.nodes[0]?.name ?? "Improvement"] as string;
+
 				setGitBranchCreateStep(gitBranchCreateSteps.create);
 				execSync(`git checkout -b ${selected} &>/dev/null`);
 				const hasChanges = !execSync(`git status`).toString().includes("working tree clean");
 				if (hasChanges) {
 					execSync(`git stash &>/dev/null`);
 				}
-				execSync(`git commit --allow-empty -m "Start working on ${selected}" &>/dev/null`);
+				execSync(`git commit --allow-empty -m "${type}(${selectedIssue.team.key}-${selectedIssue.number}): ${selectedIssue.title}" &>/dev/null`);
 				if (hasChanges) {
 					execSync(`git stash apply --index &>/dev/null`);
 					execSync(`git stash drop stash@{0} &>/dev/null`);
 				}
 				setGitBranchCreateStep(gitBranchCreateSteps.push);
 				execSync(`git push --set-upstream origin ${selected} &>/dev/null`);
-				if (selectedIssue) {
-					const type = (labelMapping as any)[selectedIssue.labels.nodes[0]?.name ?? "Improvement"] as string;
-					execSync(`gh pr create --title "${type}(${selectedIssue.team.key}-${selectedIssue.number}): ${selectedIssue.title.toLowerCase()}" -d -b "IN PROGRESS" &>/dev/null`);
-					setGitBranchCreateStep(`gh pr create --title "${type}(${selectedIssue.team.key}-${selectedIssue.number}): ${selectedIssue.title.toLowerCase()}" -d`);
-				}
+
+				execSync(`gh pr create --title "${type}(${selectedIssue.team.key}-${selectedIssue.number}): ${selectedIssue.title.toLowerCase()}" -d -b "IN PROGRESS" &>/dev/null`);
+				setGitBranchCreateStep(`gh pr create --title "${type}(${selectedIssue.team.key}-${selectedIssue.number}): ${selectedIssue.title.toLowerCase()}" -d`);
 			}
 			setGitBranchCreateStep(gitBranchCreateSteps.success);
 			setLoading(false);
