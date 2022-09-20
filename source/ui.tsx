@@ -12,6 +12,16 @@ import { IssueSelection } from './views/issueSelection';
 
 export type StatusType = "backlog" | "unstarted" | "started" | "canceled";
 
+const labelMapping = {
+	Refactor: "refactor",
+	Bug: "fix",
+	Feature: "feat",
+	Improvement: "chore",
+	Performance: "perf",
+	Testing: "test",
+	Documentation: "docs"
+}
+
 const configFilePath = "~/.gh/linear/config.yaml";
 
 const gitBranchCreateSteps = {
@@ -44,6 +54,11 @@ export type LinearTicket = {
 			}
 		}[]
 	},
+	labels: {
+		nodes: {
+			name: string
+		}[]
+	}
 	team: {
 		key: string
 	}
@@ -156,8 +171,13 @@ const App: FC = () => {
 						team {
 							key
 						}
+						labels(first: 1) {
+							nodes {
+								name
+							}
+						}
 						url
-						integrationResources {
+						integrationResources(first: 3) {
 							nodes {
 								pullRequest {
 									url
@@ -225,10 +245,24 @@ const App: FC = () => {
 				execSync(`git checkout ${selected}`);
 				setGitBranchCreateStep(gitBranchCreateSteps.switch);
 			} else {
-				execSync(`git checkout -b ${selected}`);
+				const selectedIssue = issues.find(i => i.branchName === selected);
+				if (selectedIssue) {
+				const type = (labelMapping as any)[selectedIssue.labels.nodes[0]?.name ?? "Improvement"] as string;
+				console.log(`gh pr create --title "${type}(${selectedIssue.team.key}-${selectedIssue.number}): ${selectedIssue.title.toLowerCase()}" -d`)
+				setGitBranchCreateStep(`gh pr create --title "${type}(${selectedIssue.team.key}-${selectedIssue.number}): ${selectedIssue.title.toLowerCase()}" -d`);
+				exit();
+				return
+				}
 				setGitBranchCreateStep(gitBranchCreateSteps.create);
-				execSync(`git push --set-upstream origin ${selected}`);
+				execSync(`git checkout -b ${selected}`);
 				setGitBranchCreateStep(gitBranchCreateSteps.push);
+				execSync(`git push --set-upstream origin ${selected}`);
+				// const selectedIssue = issues.find(i => i.branchName === selected);
+				// if (selectedIssue) {
+				// 	setGitBranchCreateStep(gitBranchCreateSteps.draft);
+				// 	const type = (labelMapping as any)[selectedIssue.labels.nodes[0]?.name ?? "Improvement"] as string;
+				// 	execSync(`gh pr create --title "${type}(${selectedIssue.team.key}-${selectedIssue.number}): ${selectedIssue.title.toLowerCase()}" -d`);
+				// }
 			}
 			setGitBranchCreateStep(gitBranchCreateSteps.success);
 			setLoading(false);
