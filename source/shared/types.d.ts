@@ -31,7 +31,7 @@ export type LinearTicket = {
   }
 }
 
-export type Config = { linearToken: null | string, defaultBranch: string };
+export type Config = { linearToken: null | string, defaultBranch: string, defaultReviewers?: string[] };
 
 export type LinearSearchQuery = {
   filter: {
@@ -67,4 +67,8 @@ export interface Arguments {
   search?: String;
   my?: boolean;
   help?: boolean;
+  ready?: boolean;
+  "add-reviewer"?: String[];
+  "remove-reviewer"?: String[];
+  "code-review"?: boolean;
 }

@@ -82,3 +82,36 @@ export function gitPublishBranch(branchName?: string): void {
 export function gitCreatePr(ticket: LinearTicket): void {
   execSync(`gh pr create --title "${getTicketType(ticket)}(${ticket.team.key}-${ticket.number}): ${ticket.title}" -d -b "" &>/dev/null`);
 }
+
+/**
+ * Returns the current branch.
+ */
+export function gitGetCurrentBranch(): string {
+  return execSync(`git rev-parse --abbrev-ref HEAD`).toString();
+}
+
+/**
+ * Readies a PR.
+ */
+export function gitReadyPR(): void {
+  const noPr = execSync(`gh pr view`).toString().includes("no pull requests found for branch");
+  if (noPr) {
+    console.log("There is no PR associated with this branch")
+    return;
+  }
+  execSync(`gh pr ready`);
+}
+
+/**
+ * Starts codeReview on a PR.
+ */
+export function gitStartCodeReview(reviewers: string[]): void {
+  execSync(`gh pr edit ${reviewers.map(t => `--add-reviewer=${t}`).join(" ")}`);
+}
+
+/**
+ * Removes codeReviewers from a PR.
+ */
+export function gitRemoveReviewers(reviewers: string[]): void {
+  execSync(`gh pr edit ${reviewers.map(t => `--remove-reviewer=${t}`).join(" ")}`);
+}

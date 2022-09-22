@@ -1,3 +1,6 @@
+import { Arguments } from './types';
+import { parse } from 'ts-command-line-args';
+
 export const labelMapping = {
   Refactor: "refactor",
   Bug: "fix",
@@ -18,3 +21,21 @@ export const gitBranchCreateSteps = {
   draft: "Creating a Draft PR...",
   success: "Branch created successfully! You can start working now",
 } as const;
+
+export const ARGS = parse<Arguments>(
+  {
+    ticket: { type: String, alias: 't', optional: true, description: 'Directly start working on a ticket (ex lh -t SPR-12)' },
+    search: { type: String, alias: 's', optional: true, description: 'Search for tickets' },
+    "add-reviewer": { type: String, optional: true, multiple: true, description: 'Add reviewers - adds them as default if only flag' },
+    "remove-reviewer": { type: String, optional: true, multiple: true, description: 'Remove reviewers - adds them from default if only flag' },
+    my: { type: Boolean, optional: true, alias: 'm', description: 'Show only my tickets' },
+    ready: { type: Boolean, optional: true, alias: 'r', description: 'Mark related PR as ready for review' },
+    "code-review": { type: Boolean, optional: true, alias: 'c', description: 'Start codereview by assigning default reviewers or passed ones' },
+    help: { type: Boolean, optional: true, alias: 'h', description: 'Prints this usage guide' },
+  },
+  {
+    helpArg: 'help',
+    headerContentSections: [{ header: 'Linhub', content: 'Thanks for using Linhub' }],
+    footerContentSections: [{ header: 'Legal', content: `Copyright: THE ARC GmbH` }],
+  },
+);

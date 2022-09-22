@@ -3,7 +3,11 @@ import { configFilePath } from './constants';
 import { execSync } from "child_process";
 
 export function getConfig(): Config {
-  const configRAW = execSync(`cat ${configFilePath}`).toString();
+  let configRAW = execSync(`cat ${configFilePath}`).toString();
+  if (configRAW.split(":").length === 1) {
+    configRAW = `linearToken: ${configRAW}`;
+    execSync(`echo ${configRAW} > ${configFilePath}`);
+  }
   const configPairs = configRAW
     .split("\n")
     .filter(c => c.replace(/\s/g, "").length > 0)
@@ -11,12 +15,17 @@ export function getConfig(): Config {
 
   let config: Config = {
     linearToken: "",
-    defaultBranch: "staging"
+    defaultBranch: "staging",
+    defaultReviewers: []
   };
   configPairs.forEach(p => {
     const key = p[0];
     if (key && p[1]) {
-      config[key as keyof Config] = p[1];
+      if (key === "defaultReviewers") {
+        config.defaultReviewers = p[1].split(",").map(c => c.trim());
+      } else {
+        (config[key as keyof Config] as string) = (p[1] as string).trim();
+      }
     }
   });
   return config;
@@ -38,7 +47,7 @@ export function saveConfig(config: Partial<Config>): Config {
   execSync(`rm -rf ${configFilePath}`);
   Object.entries(configToSave).forEach(entry => {
     if (entry[0] && entry[1]) {
-      execSync(`echo ${entry[0]}:${entry[1]} >> ${configFilePath}`);
+      execSync(`echo ${entry[0]}: ${entry[1]} >> ${configFilePath}`);
     }
   });
   return configToSave;
