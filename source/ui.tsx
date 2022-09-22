@@ -9,64 +9,14 @@ import { TaskList, Task } from 'ink-task-list';
 import spinners from 'cli-spinners';
 import { execSync } from "child_process";
 import { IssueSelection } from './views/issueSelection';
-
-export type StatusType = "backlog" | "unstarted" | "started" | "canceled";
-
-const labelMapping = {
-	Refactor: "refactor",
-	Bug: "fix",
-	Feature: "feat",
-	Improvement: "chore",
-	Performance: "perf",
-	Testing: "test",
-	Documentation: "docs"
-}
-const configFilePath = "~/.gh/linear/config.yaml";
-
-const gitBranchCreateSteps = {
-	check: "Check if branch exists...",
-	create: "Creating and switching to branch...",
-	switch: "Switching to branch...",
-	push: "Pushing branch...",
-	draft: "Creating a Draft PR...",
-	success: "Branch created successfully! You can start working now",
-}
-
-export type LinearTicket = {
-	id: string,
-	title: string,
-	url: string,
-	number: number,
-	priority: number,
-	dueDate: any,
-	branchName: string,
-	state: {
-		name: string,
-		type: StatusType,
-		color: string,
-		position: number
-	},
-	integrationResources: {
-		nodes: {
-			pullRequest: {
-				url: string
-			}
-		}[]
-	},
-	labels: {
-		nodes: {
-			name: string
-		}[]
-	}
-	team: {
-		key: string
-	}
-}
+import { Config, LinearTicket } from './types';
+import { configFilePath, gitBranchCreateSteps, labelMapping } from './constants';
+import { IssueQuery } from './linearHelper';
 
 const App: FC = () => {
 	const [value, setValue] = useState("");
 	const [response, setResponse] = useState("");
-	const [linearApiToken, setLinearApiToken] = useState("");
+	const [config, setConfig] = useState<Config>({linearToken: null, defaultBranch: "staging"});
 	const [linearApiTokenPresent, setLinearApiTokenPresent] = useState(false);
 	const [loading, setLoading] = useState(false);
 	const [isGitRepo, setIsGitRepo] = useState(false);
@@ -82,11 +32,11 @@ const App: FC = () => {
 	const [appheight, setHeight] = useState<number>(50);
 
 	useEffect(() => {
-		if (!linearApiToken) {
+		if (!config) {
 			return;
 		}
 		setFilterForMyIssues(false);
-	}, [linearApiToken])
+	}, [config])
 
 	useEffect(() => {
 		const intervalStatusCheck = setInterval(() => {
@@ -112,7 +62,7 @@ const App: FC = () => {
 			fetch,
 			uri: "https://api.linear.app/graphql",
 			headers: {
-				authorization: `Bearer ${linearApiToken.trim()}`
+				authorization: `Bearer ${config.linearToken?.trim()}`
 			}
 		});
 
@@ -144,49 +94,42 @@ const App: FC = () => {
 
 		if (value) {
 			if (/^\w{3}.\d+$/.test(value)) {
-				variables["filter"] = {and: { team: {key: { eq: /\w{3}/.test(value) ? value.match(/\w{3}/)![0]!.toUpperCase() : undefined }}, number: {eq: /\d+/.test(value) ? parseInt(value.match(/\d+/)![0]!) : undefined}}};
+				variables["filter"] = {
+					and: {
+						team: {
+							key: {
+								eq: /\w{3}/.test(value) ? value.match(/\w{3}/)![0]!.toUpperCase() : undefined
+							}
+						},
+						number: {
+							eq: /\d+/.test(value) ? parseInt(value.match(/\d+/)![0]!) : undefined
+						}
+					}
+				};
 			} else if (/^\w{3}$/.test(value)) {
-				variables["filter"]["team"] = {key: { eq: value.toUpperCase() }};
+				variables["filter"]["team"] = {
+					key: {
+						eq: value.toUpperCase()
+					}
+				};
 			} else {
-				variables["filter"]["or"] = {title: {contains: value}, team: {key: { eq: /\w{3}/.test(value) ? value.match(/\w{3}/)![0]!.toUpperCase() : undefined }}, number: {eq: /\d+/.test(value) ? parseInt(value.match(/\d+/)![0]!) : undefined}};
+				variables["filter"]["or"] = {
+					title: {
+						contains: value
+					},
+					team: {
+						key: {
+							eq: /\w{3}/.test(value) ? value.match(/\w{3}/)![0]!.toUpperCase() : undefined
+						}
+					},
+					number: {
+						eq: /\d+/.test(value) ? parseInt(value.match(/\d+/)![0]!) : undefined
+					}
+				};
 			}
 		}
 
-		const response = await client.query({query: gql`
-			query MyIssues($filter: IssueFilter, $first: Int) {
-				issues(filter: $filter, first: $first) {
-					nodes {
-						id
-						title
-						number
-						priority
-						branchName
-						state {
-							name
-							color
-							position
-							type
-						}
-						team {
-							key
-						}
-						labels(first: 1) {
-							nodes {
-								name
-							}
-						}
-						url
-						integrationResources(first: 3) {
-							nodes {
-								pullRequest {
-									url
-								}
-							}
-						}
-					}
-				}
-			}
-		`, variables});
+		const response = await client.query({query: IssueQuery, variables});
 
 
     if (response && response.data && response.data.issues) {
@@ -209,8 +152,24 @@ const App: FC = () => {
 
 	useEffect(() => {
 		try {
-			const token = execSync(`cat ${configFilePath}`).toString();
-			setLinearApiToken(token);
+			const configRAW = execSync(`cat ${configFilePath}`).toString();
+			const configPairs = configRAW
+				.split("\n")
+				.filter(c => c.replace(/\s/g, "").length > 0)
+				.map(line => line.split(":"));
+
+			let config: Config = {
+				linearToken: "",
+				defaultBranch: "staging"
+			};
+			configPairs.forEach(p => {
+				const key = p[0];
+				if (key && p[1]) {
+					config[key as keyof Config] = p[1];
+				}
+			})
+
+			setConfig(config);
 
 			setLinearApiTokenPresent(true);
 		} catch (e) {
@@ -290,7 +249,7 @@ const App: FC = () => {
 		return <Box marginY={1} flexDirection='column'>
 			<Text color="blue" bold>Please provide your Linear API token.</Text>
 			<Text color="gray">The token will only be saved locally.</Text>
-			<TextInput value={linearApiToken} placeholder="lin_api_..." onChange={setLinearApiToken} onSubmit={saveLinearToken} />
+			<TextInput value={config.linearToken ?? ""} placeholder="lin_api_..." onChange={(value) => setConfig({...config, linearToken: value})} onSubmit={saveLinearToken} />
 		</Box>
 	}
 

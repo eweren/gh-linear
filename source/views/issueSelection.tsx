@@ -5,7 +5,7 @@ import { ItemComponent } from '../components/selectionListItem';
 import { useFullHeight } from '../hooks/useFullHeight';
 import { Item } from 'ink-select-input/build/SelectInput';
 import { execSync } from "child_process";
-import { LinearTicket } from '../ui';
+import { LinearTicket } from '../types';
 
 /** use the label in the following form: url~~~title~~~branchName~~colorCode~~~state~~~dueDate */
 export const IssueSelection: FC<{data: {label: string, value: string}[], onAbort?: () => void; onSelect?: (item: Item<string>) => void}> = (props) => {
