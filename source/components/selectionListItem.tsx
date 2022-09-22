@@ -1,11 +1,14 @@
-import { ItemProps } from 'ink-select-input/build';
 import React, { FC } from 'react';
 import {Box, Text, Transform } from 'ink';
 import chalk from 'chalk';
-import { LinearTicket, StatusType } from '../types';
+import { LinearTicket, StatusType } from '../shared/types';
+import { Props } from './selectInput/item';
 
-export const ItemComponent: FC<ItemProps> = (props) => {
-  const {team, title, number, state, dueDate} = JSON.parse(props.label) as LinearTicket;
+export const ItemComponent: FC<Props<LinearTicket>> = (props) => {
+  if (!props.value) {
+    return <></>
+  }
+  const {team, title, number, state, dueDate} = props.value;
 
   const status = state.type as StatusType;
 
