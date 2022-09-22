@@ -1,6 +1,6 @@
 {
 	"name": "gh-linear",
-	"version": "0.3.0",
+	"version": "0.3.1",
 	"license": "MIT",
 	"engines": {
 		"node": ">=10"
@@ -12,17 +12,29 @@
 		"test": "xo && ava"
 	},
 	"files": [
-		"dist/cli.js",
-		"dist/views/issueSelection.js",
-		"dist/hooks/useFullHeight.js",
 		"dist/components/selectionListItem.js",
+		"dist/components/selectInput/indicator.js",
+		"dist/components/selectInput/item.js",
+		"dist/components/selectInput/selectInput.js",
+		"dist/helpers/git.helper.js",
+		"dist/helpers/linear.helper.js",
+		"dist/hooks/useFullHeight.js",
+		"dist/pages/GitRepoOnly.page.js",
+		"dist/pages/IssueSelection.page.js",
+		"dist/pages/LinearTokenInput.page.js",
+		"dist/pages/Search.page.js",
+		"dist/pages/StartWorking.page.js",
+		"dist/shared/config.js",
+		"dist/shared/constants.js",
+		"dist/shared/utils.js",
 		"dist/cli.js",
 		"dist/ui.js"
 	],
 	"main": "dist/cli.js",
 	"bin": {
 		"linhub": "./dist/cli.js",
-		"lh": "./dist/cli.js"
+		"lh": "./dist/cli.js",
+		"h": "./dist/cli.js"
 	},
 	"dependencies": {
 		"@apollo/client": "^3.6.2",
