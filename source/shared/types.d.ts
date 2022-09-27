@@ -65,10 +65,13 @@ export type ValueOf<T> = T[keyof T];
 export interface Arguments {
   ticket?: String;
   search?: String;
-  my?: boolean;
+  i?: boolean;
   help?: boolean;
   ready?: boolean;
   "add-reviewer"?: String[];
   "remove-reviewer"?: String[];
   "code-review"?: boolean;
+  merge?: boolean;
+  version?: boolean;
+  update?: boolean;
 }

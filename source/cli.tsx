@@ -1,16 +1,27 @@
 #!/usr/bin/env node
 import React from 'react';
-import {render} from 'ink';
+import { render } from 'ink';
 
 import App from './ui';
 
 import { getConfig, saveConfig } from './shared/config';
 import { gitReadyPR, gitRemoveReviewers, gitStartCodeReview } from './helpers/git.helper';
 import { ARGS } from './shared/constants';
+import { getInstalledVersion, getLatestVersion, isUpdateAvailable, updatePackage } from './helpers/package.helper';
 
-if (ARGS['add-reviewer'] && Object.keys(ARGS).length === 1) {
+if (ARGS.update) {
+  if (isUpdateAvailable()) {
+    console.log(`Updating to version ${getLatestVersion()}`);
+    updatePackage();
+    console.log(`You are now using the latest version of linhub.`);
+  } else {
+    console.log(`You are already using the latest version of linhub.`);
+  }
+} else if (ARGS.version) {
+  console.log(`Version: ${getInstalledVersion()}`);
+} else if (ARGS['add-reviewer'] && Object.keys(ARGS).length === 1) {
   // Add reviewer to default
-  saveConfig({...getConfig(), defaultReviewers: [...(getConfig().defaultReviewers ?? []), ...ARGS["add-reviewer"].map(r => r.trim())]});
+  saveConfig({ ...getConfig(), defaultReviewers: [...(getConfig().defaultReviewers ?? []), ...ARGS["add-reviewer"].map(r => r.trim())] });
   console.log("Default reviewers added");
 
 } else if (ARGS['remove-reviewer'] && Object.keys(ARGS).length === 1) {
@@ -18,7 +29,7 @@ if (ARGS['add-reviewer'] && Object.keys(ARGS).length === 1) {
   const config = getConfig();
   let reviewers = config.defaultReviewers;
   const toBeRemovedReviewers = ARGS["remove-reviewer"].map(r => r.trim());
-  saveConfig({...config, defaultReviewers: reviewers?.filter(r => !toBeRemovedReviewers.includes(r))});
+  saveConfig({ ...config, defaultReviewers: reviewers?.filter(r => !toBeRemovedReviewers.includes(r)) });
   console.log("Default reviewers updated");
 
 } else if (ARGS.ready) {

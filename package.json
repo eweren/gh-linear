@@ -1,12 +1,12 @@
 {
 	"name": "gh-linear",
-	"version": "0.3.1",
+	"version": "0.3.2",
 	"license": "MIT",
 	"engines": {
 		"node": ">=10"
 	},
 	"scripts": {
-		"build": "tsc && chmod +x dist/cli.js",
+		"build": "tsc && chmod +x dist/cli.js && cp package.json dist/package.json",
 		"start": "npm run build && dist/cli.js",
 		"pretest": "npm run build",
 		"test": "xo && ava"
@@ -18,6 +18,7 @@
 		"dist/components/selectInput/selectInput.js",
 		"dist/helpers/git.helper.js",
 		"dist/helpers/linear.helper.js",
+		"dist/helpers/package.helper.js",
 		"dist/hooks/useFullHeight.js",
 		"dist/pages/GitRepoOnly.page.js",
 		"dist/pages/IssueSelection.page.js",
@@ -28,7 +29,8 @@
 		"dist/shared/constants.js",
 		"dist/shared/utils.js",
 		"dist/cli.js",
-		"dist/ui.js"
+		"dist/ui.js",
+		"package.json"
 	],
 	"main": "dist/cli.js",
 	"bin": {
