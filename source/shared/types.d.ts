@@ -60,6 +60,13 @@ export type LinearSearchQuery = {
   }, first: number
 };
 
+export type LinearSelfAssignInput = {
+  input: {
+    assigneeId: string
+  },
+  issueUpdateId: string
+}
+
 export type ValueOf<T> = T[keyof T];
 
 export interface Arguments {
@@ -74,4 +81,5 @@ export interface Arguments {
   merge?: boolean;
   version?: boolean;
   update?: boolean;
+  web?: boolean;
 }

@@ -1,8 +1,27 @@
 import { ApolloClient, gql, HttpLink, InMemoryCache } from '@apollo/client';
 import { getConfig } from '../shared/config';
 import { labelMapping } from '../shared/constants';
-import { LinearSearchQuery, LinearTicket } from '../shared/types';
+import { LinearSearchQuery, LinearSelfAssignInput, LinearTicket } from '../shared/types';
 import fetch from 'cross-fetch';
+
+export const SelfAssignIssue = gql`
+  mutation SelfAssignIssue($input: IssueUpdateInput!, $issueUpdateId: String!) {
+    issueUpdate(input: $input, id: $issueUpdateId) {
+      success
+    }
+  }
+`;
+
+export const AvailableUsers = gql`
+  query AvailableUsers {
+    availableUsers {
+      users {
+        isMe
+        id
+      }
+    }
+  }
+`;
 
 export const IssueQuery = gql`
   query MyIssues($filter: IssueFilter, $first: Int) {
@@ -39,6 +58,12 @@ export const IssueQuery = gql`
     }
   }
 `;
+
+export async function getMyId(): Promise<string | undefined> {
+  const { data } = await LinearClient.query({ query: AvailableUsers })
+  const users = data?.availableUsers?.users as { isMe: boolean, id: string }[] | undefined;
+  return users?.find(u => u.isMe === true)?.id
+}
 
 export function getSearchVariables(value: string, filterForMyIssues: boolean): LinearSearchQuery {
   const variables: LinearSearchQuery = {
@@ -115,6 +140,15 @@ export async function getTickets(value: string, filterForMyIssues: boolean): Pro
 
 export function getTicketType(ticket: LinearTicket): string {
   return labelMapping[(ticket.labels.nodes[0]?.name ?? "Improvement") as keyof typeof labelMapping];
+}
+
+export async function selfAssignTicket(ticket: LinearTicket): Promise<void> {
+  const assigneeId = await getMyId();
+  if (!assigneeId) {
+    return;
+  }
+  const variables: LinearSelfAssignInput = { input: { assigneeId }, issueUpdateId: ticket.id }
+  await LinearClient.mutate({ mutation: SelfAssignIssue, variables })
 }
 
 const httpLink = new HttpLink({
