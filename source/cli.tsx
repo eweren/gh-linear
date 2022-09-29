@@ -5,7 +5,7 @@ import { render } from 'ink';
 import App from './ui';
 
 import { getConfig, saveConfig } from './shared/config';
-import { gitReadyPR, gitRemoveReviewers, gitStartCodeReview } from './helpers/git.helper';
+import { gitOpenWebView, gitReadyPR, gitRemoveReviewers, gitStartCodeReview } from './helpers/git.helper';
 import { ARGS } from './shared/constants';
 import { getInstalledVersion, getLatestVersion, isUpdateAvailable, updatePackage } from './helpers/package.helper';
 
@@ -24,6 +24,8 @@ if (ARGS.update) {
   saveConfig({ ...getConfig(), defaultReviewers: [...(getConfig().defaultReviewers ?? []), ...ARGS["add-reviewer"].map(r => r.trim())] });
   console.log("Default reviewers added");
 
+} else if (ARGS["web"]) {
+  gitOpenWebView()
 } else if (ARGS['remove-reviewer'] && Object.keys(ARGS).length === 1) {
   // Remove reviewer from default
   const config = getConfig();

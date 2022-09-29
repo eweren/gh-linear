@@ -115,3 +115,10 @@ export function gitStartCodeReview(reviewers: string[]): void {
 export function gitRemoveReviewers(reviewers: string[]): void {
   execSync(`gh pr edit ${reviewers.map(t => `--remove-reviewer=${t}`).join(" ")}`);
 }
+
+/**
+ * Opens the PR related to the current branch on remote.
+ */
+export function gitOpenWebView(): void {
+  execSync("gh pr view -w");
+}

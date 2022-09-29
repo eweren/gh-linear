@@ -35,6 +35,7 @@ export const ARGS = parse<Arguments>(
     help: { type: Boolean, optional: true, alias: 'h', description: 'Prints this usage guide' },
     version: { type: Boolean, optional: true, alias: 'v', description: 'Prints the version of this package' },
     update: { type: Boolean, optional: true, alias: 'u', description: 'Updates to the latest version' },
+    web: { type: Boolean, optional: true, alias: 'w', description: 'Open the PR on Github' },
   },
   {
     helpArg: 'help',
