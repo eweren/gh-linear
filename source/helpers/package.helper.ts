@@ -9,7 +9,7 @@ export function getInstalledVersion(): string | undefined {
 }
 
 export function getLatestVersion(): string {
-  return execSync(`npm show gh-linear version`).toString()
+  return execSync(`npm show gh-linear version`).toString().trim();
 }
 
 export function updatePackage(): void {

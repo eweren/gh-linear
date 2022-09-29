@@ -52,7 +52,7 @@ export function gitCreateEmptyCommit(ticket: LinearTicket, preserveChanges = fal
   if (preserveChanges && hasChanges) {
     gitStash();
   }
-  execSync(`git commit --allow-empty -m "${getTicketType(ticket)}(${ticket.team.key}-${ticket.number}): ${ticket.title}" &>/dev/null`);
+  execSync(`git commit --allow-empty -m "${getTicketType(ticket)}(${ticket.team.key}-${ticket.number}): ${ticket.title.toLowerCase()}" &>/dev/null`);
   if (preserveChanges && hasChanges) {
     gitApplyAndDropStash();
   }
