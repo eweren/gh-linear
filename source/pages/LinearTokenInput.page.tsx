@@ -1,4 +1,4 @@
-import React, { FC, useState } from 'react';
+import React, { FC, useEffect, useState } from 'react';
 import { Config } from '../shared/types';
 import {Box, Text } from 'ink';
 import TextInput from 'ink-text-input';
@@ -9,10 +9,14 @@ export const LinearTokenInputPage: FC<{onConfigChange: (config: Config) => void}
   const [config, setConfig] = useState(getConfig());
   const [isInvalidKey, setIsInvalidKey] = useState(false);
 
+  useEffect(() => {
+    Linear.isValidApiKey().then((t) => setIsInvalidKey(!t));
+  }, [])
+
 	return <Box marginY={1} flexDirection='column'>
-  <Text color="blue" bold>Please provide your Linear API token.</Text>
-  <Text color="gray">The token will only be saved locally.</Text>
-    {isInvalidKey && <Text color="red">The given token seems to be invalid.</Text>}
+    <Text color="blue" bold>Please provide your Linear API token (https://linear.app/settings/api)</Text>
+    {!isInvalidKey && <Text color="gray">The token will only be saved locally</Text>}
+    {isInvalidKey && <Text color="red">The given token seems to be invalid</Text>}
   <TextInput
     value={config.linearToken ?? ""}
     placeholder="lin_api_..."
