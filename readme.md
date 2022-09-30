@@ -25,7 +25,7 @@ Options
   --remove-reviewer string[]   Remove reviewers - adds them from default if only flag
   -i, --i                      Show only my tickets
   -r, --ready                  Mark related PR as ready for review
-  -c, --code-review            Start codereview by assigning default reviewers or passed 
+  -c, --code-review            Start codereview by assigning default reviewers or passed
   -m, --merge                  Merge the related pr
   -h, --help                   Prints this usage guide
   -s, --status                 Shows the status of the current branch/ticket
