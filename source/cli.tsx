@@ -8,6 +8,7 @@ import { getConfig, saveConfig } from './shared/config';
 import Git from './helpers/git.helper';
 import { ARGS } from './shared/constants';
 import { getInstalledVersion, getLatestVersion, isUpdateAvailable, updatePackage } from './helpers/package.helper';
+import Linear from './helpers/linear.helper';
 
 if (ARGS.update) {
   if (isUpdateAvailable()) {
@@ -40,6 +41,16 @@ if (ARGS.update) {
 } else if (ARGS.merge) {
   // Merge PR
   Git.mergePR();
+} else if (ARGS.status) {
+  const currentTicket = Git.getCurrentBranch().split("-").slice(0, 2).join("-").toUpperCase();
+  Linear.getTickets(currentTicket, false).then(([ticket]) => {
+    if (ticket) {
+      const linearStatus = ticket.state;
+      console.log(`${currentTicket} ${ticket.title} - ${linearStatus.name}`);
+    } else {
+      console.log("No ticket found for this branch.")
+    }
+  })
 } else if (ARGS["code-review"]) {
   // Request CodeReview on PR - either with default reviewer or with provided ones
   const reviewers = ARGS['add-reviewer'] ? ARGS['add-reviewer'] : getConfig().defaultReviewers;
