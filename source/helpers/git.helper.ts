@@ -105,6 +105,19 @@ export default class Git {
   }
 
   /**
+   * Merges a PR.
+   */
+  public static mergePR(): void {
+    const noPr = execSync(`gh pr view`).toString().includes("no pull requests found for branch");
+    if (noPr) {
+      console.log("There is no PR associated with this branch")
+      return;
+    }
+    console.log("Requesting merge...")
+    execSync(`gh pr merge -m --auto -d`);
+  }
+
+  /**
    * Starts codeReview on a PR.
    */
   public static startCodeReview(reviewers: string[]): void {

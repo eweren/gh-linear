@@ -37,7 +37,9 @@ if (ARGS.update) {
 } else if (ARGS.ready) {
   // Make PR ready
   Git.readyPR();
-
+} else if (ARGS.merge) {
+  // Merge PR
+  Git.mergePR();
 } else if (ARGS["code-review"]) {
   // Request CodeReview on PR - either with default reviewer or with provided ones
   const reviewers = ARGS['add-reviewer'] ? ARGS['add-reviewer'] : getConfig().defaultReviewers;
