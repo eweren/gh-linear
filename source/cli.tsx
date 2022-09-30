@@ -5,7 +5,7 @@ import { render } from 'ink';
 import App from './ui';
 
 import { getConfig, saveConfig } from './shared/config';
-import { gitOpenWebView, gitReadyPR, gitRemoveReviewers, gitStartCodeReview } from './helpers/git.helper';
+import Git from './helpers/git.helper';
 import { ARGS } from './shared/constants';
 import { getInstalledVersion, getLatestVersion, isUpdateAvailable, updatePackage } from './helpers/package.helper';
 
@@ -25,7 +25,7 @@ if (ARGS.update) {
   console.log("Default reviewers added");
 
 } else if (ARGS["web"]) {
-  gitOpenWebView()
+  Git.openWebView()
 } else if (ARGS['remove-reviewer'] && Object.keys(ARGS).length === 1) {
   // Remove reviewer from default
   const config = getConfig();
@@ -36,17 +36,17 @@ if (ARGS.update) {
 
 } else if (ARGS.ready) {
   // Make PR ready
-  gitReadyPR();
+  Git.readyPR();
 
 } else if (ARGS["code-review"]) {
   // Request CodeReview on PR - either with default reviewer or with provided ones
   const reviewers = ARGS['add-reviewer'] ? ARGS['add-reviewer'] : getConfig().defaultReviewers;
   if (reviewers && !ARGS['remove-reviewer']) {
-    gitStartCodeReview(reviewers as string[]);
+    Git.startCodeReview(reviewers as string[]);
     console.log("Code review requested.")
   } else {
     if (ARGS['remove-reviewer']) {
-      gitRemoveReviewers(ARGS['remove-reviewer'] as string[]);
+      Git.removeReviewers(ARGS['remove-reviewer'] as string[]);
       console.log("Code reviewers removed.")
     } else {
       console.log("Could not find any reviewers. Please provide some by using the --add-reviewer flag.")

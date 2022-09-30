@@ -3,10 +3,10 @@ import type { LinearTicket, ValueOf } from '../shared/types'
 import TextInput from 'ink-text-input';
 import {Box, Text, useApp } from 'ink';
 import { gitBranchCreateSteps } from '../shared/constants';
-import { checkIfRemoteBranchExists, gitCheckoutBranch, gitCreateEmptyCommit, gitPublishBranch, gitCreatePr, gitGetCurrentBranch } from '../helpers/git.helper';
+import Git from '../helpers/git.helper';
 import { Task, TaskList } from 'ink-task-list';
 import spinners from 'cli-spinners';
-import { selfAssignTicket } from '../helpers/linear.helper';
+import Linear from '../helpers/linear.helper';
 
 export const StartWorkPage: FC<{selectedTicket: LinearTicket, onAbort: () => void}> = ({selectedTicket, onAbort}) => {
 	const [gitBranchCreateStep, setGitBranchCreateStep] = useState<ValueOf<typeof gitBranchCreateSteps> | null>(null);
@@ -18,23 +18,23 @@ export const StartWorkPage: FC<{selectedTicket: LinearTicket, onAbort: () => voi
 		if (selectedTicket) {
 			setGitBranchCreateStep(gitBranchCreateSteps.check);
 
-			if (checkIfRemoteBranchExists(selectedTicket.branchName)) {
-				gitCheckoutBranch(selectedTicket.branchName);
+			if (Git.checkIfRemoteBranchExists(selectedTicket.branchName)) {
+				Git.checkoutBranch(selectedTicket.branchName);
 				setGitBranchCreateStep(gitBranchCreateSteps.switch);
 			} else {
-				if (branch !== gitGetCurrentBranch()) {
-					gitCheckoutBranch(branch);
+				if (branch !== Git.getCurrentBranch()) {
+					Git.checkoutBranch(branch);
 				}
 				setGitBranchCreateStep(gitBranchCreateSteps.create);
-				gitCheckoutBranch(selectedTicket.branchName, true);
-				await selfAssignTicket(selectedTicket);
-				gitCreateEmptyCommit(selectedTicket, true);
+				Git.checkoutBranch(selectedTicket.branchName, true);
+				await Linear.selfAssignTicket(selectedTicket);
+				Git.gitCreateEmptyCommit(selectedTicket, true);
 
 				setGitBranchCreateStep(gitBranchCreateSteps.push);
-				gitPublishBranch(selectedTicket.branchName);
+				Git.publishBranch(selectedTicket.branchName);
 
 				setGitBranchCreateStep(gitBranchCreateSteps.draft);
-				gitCreatePr(selectedTicket);
+				Git.createPr(selectedTicket);
 			}
 			setGitBranchCreateStep(gitBranchCreateSteps.success);
 			exit();
@@ -93,7 +93,7 @@ export const StartWorkPageDialog: FC<{selectedTicket: LinearTicket, onSubmit: ()
  * Just another dialog.
  */
 export const WhichBranchToBranchFrom: FC<{onSubmit: (branch: string) => void}> = ({onSubmit}) => {
-	const currentBranch = gitGetCurrentBranch();
+	const currentBranch = Git.getCurrentBranch();
 	const [value, setValue] = useState("");
 
 	return <>

@@ -1,7 +1,7 @@
 import React, { FC, useState } from 'react'
 import {Box, Text } from 'ink';
 import TextInput from 'ink-text-input';
-import { getTickets } from '../helpers/linear.helper';
+import Linear from '../helpers/linear.helper';
 import { LinearTicket } from '../shared/types';
 
 export const SearchPage: FC<{onLoadingChange: ((loading: boolean) => void) | undefined, onSubmit: ((tickets: LinearTicket[]) => void) | undefined}> = (props) => {
@@ -15,7 +15,7 @@ export const SearchPage: FC<{onLoadingChange: ((loading: boolean) => void) | und
     }
     props.onLoadingChange?.(true);
 
-    const tickets = await getTickets(value, filterForMyIssues);
+    const tickets = await Linear.getTickets(value, filterForMyIssues);
     props.onLoadingChange?.(false);
     props.onSubmit?.(tickets);
   }
