@@ -3,21 +3,30 @@ import { Config } from '../shared/types';
 import {Box, Text } from 'ink';
 import TextInput from 'ink-text-input';
 import { getConfig, saveConfig } from '../shared/config';
+import Linear from '../helpers/linear.helper';
 
 export const LinearTokenInputPage: FC<{onConfigChange: (config: Config) => void}> = ({onConfigChange}) => {
   const [config, setConfig] = useState(getConfig());
+  const [isInvalidKey, setIsInvalidKey] = useState(false);
 
 	return <Box marginY={1} flexDirection='column'>
   <Text color="blue" bold>Please provide your Linear API token.</Text>
   <Text color="gray">The token will only be saved locally.</Text>
+    {isInvalidKey && <Text color="red">The given token seems to be invalid.</Text>}
   <TextInput
     value={config.linearToken ?? ""}
     placeholder="lin_api_..."
     onChange={(linearToken) => setConfig({...config, linearToken})}
-    onSubmit={(linearToken) => {
+      onSubmit={async (linearToken) => {
       const newConfig = saveConfig({linearToken});
-      setConfig(newConfig);
-      onConfigChange(newConfig);
+      const isValid = await Linear.isValidApiKey();
+      if (isValid) {
+        setConfig(newConfig);
+        onConfigChange(newConfig);
+        setIsInvalidKey(false);
+      } else {
+        setIsInvalidKey(true);
+      }
     }}
   />
 </Box>
