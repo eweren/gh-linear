@@ -40,10 +40,10 @@ const App: FC<{args: Arguments}> = ({args}) => {
 			return;
 		}
 
-		if (args.search || args.ticket || args.i) {
+		if (args.find || args.ticket || args.i) {
 			setLoading(true);
 			const fetchTickets = async () => {
-				const tickets = await Linear.getTickets((args.ticket ?? args.search ?? "") as string, args.ticket ? false : args.i ?? false);
+				const tickets = await Linear.getTickets((args.ticket ?? args.find ?? "") as string, args.ticket ? false : args.i ?? false);
 				setTextToDisplay(JSON.stringify(tickets));
 				if (tickets.length > 1) {
 					setTickets(tickets);

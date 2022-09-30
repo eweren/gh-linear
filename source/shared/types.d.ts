@@ -71,7 +71,7 @@ export type ValueOf<T> = T[keyof T];
 
 export interface Arguments {
   ticket?: String;
-  search?: String;
+  find?: String;
   i?: boolean;
   help?: boolean;
   ready?: boolean;
@@ -82,4 +82,5 @@ export interface Arguments {
   version?: boolean;
   update?: boolean;
   web?: boolean;
+  status?: boolean;
 }
