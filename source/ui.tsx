@@ -28,7 +28,11 @@ const App: FC<{args: Arguments}> = ({args}) => {
 			setIsValidApiKey(true);
 			return;
 		}
-		Linear.isValidApiKey().then(setIsValidApiKey)
+		setLoading(true)
+		Linear.isValidApiKey().then((valid) => {
+			setIsValidApiKey(valid);
+			setLoading(false);
+		});
 	}, [config])
 
 	useEffect(() => {
