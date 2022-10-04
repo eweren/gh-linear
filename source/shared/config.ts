@@ -3,32 +3,37 @@ import { configFilePath } from './constants';
 import { execSync } from "child_process";
 
 export function getConfig(): Config {
-  let configRAW = execSync(`cat ${configFilePath}`).toString();
-  if (configRAW.split(":").length === 1) {
-    configRAW = `linearToken: ${configRAW}`;
-    execSync(`echo ${configRAW} > ${configFilePath}`);
-  }
-  const configPairs = configRAW
-    .split("\n")
-    .filter(c => c.replace(/\s/g, "").length > 0)
-    .map(line => line.split(":"));
-
-  let config: Config = {
-    linearToken: "",
-    defaultBranch: "staging",
-    defaultReviewers: []
-  };
-  configPairs.forEach(p => {
-    const key = p[0];
-    if (key && p[1]) {
-      if (key === "defaultReviewers") {
-        config.defaultReviewers = p[1].split(",").map(c => c.trim());
-      } else {
-        (config[key as keyof Config] as string) = (p[1] as string).trim();
-      }
+  try {
+    let configRAW = execSync(`cat ${configFilePath}`).toString();
+    if (configRAW.split(":").length === 1) {
+      configRAW = `linearToken: ${configRAW}`;
+      execSync(`echo ${configRAW} > ${configFilePath}`);
     }
-  });
-  return config;
+    const configPairs = configRAW
+      .split("\n")
+      .filter(c => c.replace(/\s/g, "").length > 0)
+      .map(line => line.split(":"));
+
+    let config: Config = {
+      linearToken: "",
+      defaultBranch: "staging",
+      defaultReviewers: []
+    };
+    configPairs.forEach(p => {
+      const key = p[0];
+      if (key && p[1]) {
+        if (key === "defaultReviewers") {
+          config.defaultReviewers = p[1].split(",").map(c => c.trim());
+        } else {
+          (config[key as keyof Config] as string) = (p[1] as string).trim();
+        }
+      }
+    });
+    return config;
+  } catch (e) {
+    createConfigPath();
+    return getConfig();
+  }
 }
 
 export function createConfigPath(): void {
