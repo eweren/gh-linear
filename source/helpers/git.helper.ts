@@ -82,7 +82,8 @@ export default class Git {
    * @param ticket - The ticket to create the pr for.
    */
   public static createPr(ticket: LinearTicket): void {
-    execSync(`gh pr create --title "${Linear.getTicketType(ticket)}(${ticket.team.key}-${ticket.number}): ${ticket.title}" -d -b "" &>/dev/null`);
+    const type = Linear.getTicketType(ticket);
+    execSync(`gh pr create --title "${type && type !== "undefined" ? type : "chore"}(${ticket.team.key}-${ticket.number}): ${ticket.title}" -d -b "" &>/dev/null`);
   }
 
   /**
