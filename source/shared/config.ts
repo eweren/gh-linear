@@ -44,6 +44,7 @@ export function createConfigPath(): void {
       execSync(`mkdir ~/${previousPath}`).toString();
     }
   });
+  execSync("echo linearToken: > config.yaml").toString();
 }
 
 export function saveConfig(config: Partial<Config>): Config {

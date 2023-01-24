@@ -28,13 +28,15 @@ export const StartWorkPage: FC<{selectedTicket: LinearTicket, onAbort: () => voi
 				setGitBranchCreateStep(gitBranchCreateSteps.create);
 				Git.checkoutBranch(selectedTicket.branchName, true);
 				await Linear.selfAssignTicket(selectedTicket);
-				Git.gitCreateEmptyCommit(selectedTicket, true);
+				const couldCommit = Git.gitCreateEmptyCommit(selectedTicket, true);
 
 				setGitBranchCreateStep(gitBranchCreateSteps.push);
 				Git.publishBranch(selectedTicket.branchName);
 
-				setGitBranchCreateStep(gitBranchCreateSteps.draft);
-				Git.createPr(selectedTicket);
+				if (couldCommit) {
+					setGitBranchCreateStep(gitBranchCreateSteps.draft);
+					Git.createPr(selectedTicket);
+				}
 			}
 			setGitBranchCreateStep(gitBranchCreateSteps.success);
 			exit();
