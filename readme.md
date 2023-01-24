@@ -15,6 +15,8 @@ $ lh --help
   Usage
     $ linhub // or
     $ lh
+    $ h
+    $ lin
 ```
 
 Options
