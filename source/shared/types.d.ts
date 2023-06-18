@@ -14,13 +14,11 @@ export type LinearTicket = {
     color: string,
     position: number
   },
-  integrationResources: {
+  attachments: {
     nodes: {
-      pullRequest: {
-        url: string
-      }
+      url
     }[]
-  },
+  }
   labels: {
     nodes: {
       name: string

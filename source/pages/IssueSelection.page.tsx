@@ -1,5 +1,5 @@
 import React, { FC, useEffect, useState } from 'react';
-import {Box, Text, useApp, useInput } from 'ink';
+import { Box, Text, useApp, useInput } from 'ink';
 import { ItemComponent } from '../components/selectionListItem';
 import { useFullHeight } from '../hooks/useFullHeight';
 import { Item } from 'ink-select-input/build/SelectInput';
@@ -7,9 +7,9 @@ import { execSync } from "child_process";
 import { LinearTicket } from '../shared/types';
 import SelectInput from '../components/selectInput/selectInput';
 
-export const IssueSelection: FC<{data: Item<LinearTicket>[], onAbort?: () => void; onSelect?: (item: Item<LinearTicket>) => void}> = (props) => {
+export const IssueSelection: FC<{ data: Item<LinearTicket>[], onAbort?: () => void; onSelect?: (item: Item<LinearTicket>) => void }> = (props) => {
   const fullHeight = useFullHeight();
-	const {exit} = useApp();
+  const { exit } = useApp();
 
   const [highlightedItem, setHighlightedItem] = useState<Item<LinearTicket>>();
   const [selectedItem, setSelectedItem] = useState<LinearTicket>();
@@ -32,26 +32,26 @@ export const IssueSelection: FC<{data: Item<LinearTicket>[], onAbort?: () => voi
     }
     const selectedItem = highlightedItem.value;
 
-		if ((input === 'S' || input === "s") && props.onSelect) {
+    if ((input === 'S' || input === "s") && props.onSelect) {
       props.onSelect(highlightedItem);
-		} else if (input === "W" || input === "w") {
+    } else if (input === "W" || input === "w") {
       execSync(`open ${selectedItem.url}`);
-		} else if ((input === "P" || input === "p") && selectedItem && selectedItem.integrationResources.nodes[0] && selectedItem.integrationResources.nodes[0].pullRequest.url) {
-      execSync(`open ${selectedItem.integrationResources.nodes[0].pullRequest.url}`);
-		} else if ((input === "F" || input === "f") && props.onAbort) {
+    } else if ((input === "P" || input === "p") && selectedItem && selectedItem.attachments.nodes[0] && selectedItem.attachments.nodes[0].url) {
+      execSync(`open ${selectedItem.attachments.nodes[0].url}`);
+    } else if ((input === "F" || input === "f") && props.onAbort) {
       props.onAbort();
-		} else if (input === "Q" || input === "q") {
+    } else if (input === "Q" || input === "q") {
       exit();
       return;
     }
 
-		if (key.leftArrow) {
-			// Left arrow key pressed
-		}
-	});
+    if (key.leftArrow) {
+      // Left arrow key pressed
+    }
+  });
 
 
-	return (<Box flexDirection='column'>
+  return (<Box flexDirection='column'>
     <Box flexDirection='row' justifyContent='space-between' borderStyle='round' marginRight={5}>
       <Box flexDirection='row'>
         <Text color="green">{"  ID".padEnd(12)}</Text>
@@ -62,13 +62,14 @@ export const IssueSelection: FC<{data: Item<LinearTicket>[], onAbort?: () => voi
     </Box>
     <SelectInput<LinearTicket> items={props.data} limit={fullHeight - 6} onHighlight={setHighlightedItem} onSelect={props.onSelect} itemComponent={ItemComponent} />
     <Box flexDirection='row' marginTop={Math.max(0, fullHeight - 6 - props.data.length)} marginRight={5} justifyContent='space-between' borderStyle='round'>
-      <Box flexDirection='row'paddingLeft={2}>
-          <Text color="green">{"(S) to start working  "}</Text>
-          <Text color="blue">{"(W) to view in browser  "}</Text>
-          <Text color="yellow">{"(F) to search again  "}</Text>
-          {selectedItem && selectedItem.integrationResources.nodes[0] && selectedItem.integrationResources.nodes[0].pullRequest.url && <Text color="magenta">{"(P) to show PR  "}</Text>}
+      <Box flexDirection='row' paddingLeft={2}>
+        <Text color="green">{"(S) to start working  "}</Text>
+        <Text color="blue">{"(W) to view in browser  "}</Text>
+        <Text color="yellow">{"(F) to search again  "}</Text>
+        {selectedItem && selectedItem.attachments.nodes[0] && selectedItem.attachments.nodes[0].url && <Text color="magenta">{"(P) to show PR  "}</Text>}
       </Box>
       <Text color="grey">{"(Q) to quit  "}</Text>
     </Box>
   </Box>
-)};
+  )
+};

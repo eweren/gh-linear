@@ -47,11 +47,9 @@ const IssueQuery = gql`
           }
         }
         url
-        integrationResources(first: 3) {
+        attachments(first: 3, filter: { sourceType: { eq: "github" }}) {
           nodes {
-            pullRequest {
-              url
-            }
+            url
           }
         }
       }
