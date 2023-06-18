@@ -1,4 +1,4 @@
-import { execSync } from "child_process";
+import { execSync, spawnSync } from "child_process";
 import Linear from './linear.helper';
 import { LinearTicket } from '../shared/types';
 
@@ -31,16 +31,22 @@ export default class Git {
   }
 
   /**
-   * Checks if there are changes in the repository.
+   * Checks if github cli exists.
    */
   private static hasGHCli(): boolean {
     try {
-      const hasCLI = execSync(`gh auth status`).toString().includes("Logged in to github.com as");
-      if (!hasCLI) {
-        console.log("Please install the Github CLI (https://cli.github.com/) and login to your account.");
+      const stry = spawnSync("gh", ["auth", "status"]);
+      if (stry.stderr || stry.stdout) {
+        const result = stry.stderr?.toString() || stry.stdout?.toString();
+        const hasCLI = result.includes("Logged in to github.com as");
+        if (!hasCLI) {
+          console.log("Please install the Github CLI (https://cli.github.com/) and login to your account.");
+        }
+        return hasCLI;
       }
-      return hasCLI;
+      return false;
     } catch (e) {
+      console.log(e)
       return false;
     }
   }
