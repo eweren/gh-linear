@@ -1,5 +1,8 @@
 # linhub
 
+
+![demo](GH-Linear.gif)
+
 ## Install
 
 ```bash
