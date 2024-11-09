@@ -23,7 +23,7 @@ $ lh --help
 ```
 
 Options
-
+```
   -t, --ticket string          Directly start working on a ticket (ex lh -t SPR-12)
   -f, --find string            Search for tickets
   --add-reviewer string[]      Add reviewers - adds them as default if only flag
@@ -37,5 +37,4 @@ Options
   -v, --version                Prints the version of this package
   -u, --update                 Updates to the latest version
   -w, --web                    Open the PR on Github
-
-Copyright: THE ARC GmbH
+```
